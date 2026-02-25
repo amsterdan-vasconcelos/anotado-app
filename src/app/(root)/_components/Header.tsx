@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export const HeaderRoot = () => {
   return (
     <header className="flex justify-between w-full max-w-300 m-auto">
       <div>Logo</div>
-      <Button>Entrar</Button>
+      <Link href={"/workspaces"}>Entrar</Link>
     </header>
   );
 };
