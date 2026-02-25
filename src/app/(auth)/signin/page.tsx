@@ -5,7 +5,7 @@ import type { CustomSession } from "@/types/auth";
 
 export default async function LoginPage() {
   const session = (await auth()) as CustomSession;
-  if (session?.accessToken) redirect("/workspaces");
+  if (session?.accessToken) redirect("/workspace-collection");
 
   return (
     <div className="bg-background text-foreground min-h-screen flex flex-col items-center justify-center p-8">
