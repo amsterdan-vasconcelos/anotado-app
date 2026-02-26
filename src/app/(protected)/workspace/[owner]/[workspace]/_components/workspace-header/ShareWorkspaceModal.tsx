@@ -125,7 +125,11 @@ export function ShareWorkspaceModal({
             ) : (
               <ul className="flex flex-col gap-3">
                 {collaborators.map((collab) => (
-                  <CollaboratorCard key={collab.id} collaborator={collab} />
+                  <CollaboratorCard
+                    key={collab.id}
+                    collaborator={collab}
+                    owner={owner}
+                  />
                 ))}
               </ul>
             )}
