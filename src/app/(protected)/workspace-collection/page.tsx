@@ -1,61 +1,25 @@
 import { Settings } from "lucide-react";
 import { redirect } from "next/navigation";
-import { RequestError } from "octokit";
 import { WorkspaceEmptyState } from "@/components/workspace/WorkspaceEmptyState";
 import { WorkspaceGrid } from "@/components/workspace/WorkspaceGrid";
 import { HomeHeader } from "@/components/workspace/WorkspaceHeader";
-import { auth, signOut } from "@/lib/auth";
-import { getOctokit } from "@/lib/octokit";
+import { auth } from "@/lib/auth";
+import { github } from "@/lib/github";
 import type { CustomSession } from "@/types/auth";
-
-const findWorkspaces = async (accessToken: string) => {
-  const octokit = getOctokit(accessToken);
-
-  try {
-    const [
-      { data: user },
-      {
-        data: { installations },
-      },
-    ] = await Promise.all([
-      octokit.rest.users.getAuthenticated(),
-      octokit.rest.apps.listInstallationsForAuthenticatedUser(),
-    ]);
-
-    console.log(installations);
-
-    const hasPersonalInstallation = installations.some((inst) => {
-      const account = inst.account;
-      return account && "login" in account && account.login === user.login;
-    });
-
-    const { data: repos } = await octokit.rest.repos.listForAuthenticatedUser({
-      affiliation: "owner,collaborator",
-      sort: "updated",
-      per_page: 100,
-    });
-
-    const workspaces = repos.filter((repo) => repo.name.startsWith("anotado-"));
-
-    return { workspaces, hasPersonalInstallation, user };
-  } catch (error: unknown) {
-    if (error instanceof RequestError && error.status === 401) {
-      await signOut({ redirect: false });
-      redirect("/login");
-    }
-
-    throw error;
-  }
-};
 
 const HomePage = async () => {
   const session = (await auth()) as CustomSession;
 
-  if (!session?.accessToken) redirect("/login");
+  if (!session?.accessToken) redirect("/signin");
 
-  const { workspaces, hasPersonalInstallation, user } = await findWorkspaces(
-    session.accessToken,
-  );
+  const [installationData, workspacesData] = await Promise.all([
+    github.utils.getUserInstallationStatus(session.accessToken),
+    github.utils.getUserWorkspaces(session.accessToken),
+  ]);
+
+  const { user, hasPersonalInstallation } = installationData;
+  const { workspaces } = workspacesData;
+
   const appSlug = process.env.GITHUB_APP_SLUG || "";
 
   return (

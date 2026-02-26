@@ -1,24 +1,53 @@
-import { Folder, User } from "lucide-react";
+import { Folder, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import type { User, WorkspaceRepo } from "@/types/github";
 
-type WorkspaceCardProps = {
-  name: string;
-  owner: string;
-  isCollaborator: boolean;
-  url: string;
-};
+const makeWorkspacePrettyName = (
+  workspaceName: WorkspaceRepo["name"],
+  workspaceDescription: WorkspaceRepo["description"],
+) => {
+  const workspaceSlug = workspaceName.replace("anotado-", "");
 
-const WorkspaceCard = ({
-  name,
-  owner,
-  isCollaborator,
-  url,
-}: WorkspaceCardProps) => {
-  const prettyOwner = owner
+  let displayName = workspaceSlug
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+
+  const prefix = "Workspace gerado pelo app de anotações: ";
+
+  if (workspaceDescription && workspaceDescription.startsWith(prefix)) {
+    displayName = workspaceDescription.replace(prefix, "");
+  }
+
+  return displayName;
+};
+
+const makeWorkspacePrettyOwner = (
+  ownerLogin: WorkspaceRepo["owner"]["login"],
+) => {
+  const prettyOwner = ownerLogin
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
+  return prettyOwner;
+};
+
+type WorkspaceCardProps = {
+  workspace: WorkspaceRepo;
+  user: User;
+};
+
+const WorkspaceCard = ({ workspace, user }: WorkspaceCardProps) => {
+  const prettyName = makeWorkspacePrettyName(
+    workspace.name,
+    workspace.description,
+  );
+
+  const prettyOwner = makeWorkspacePrettyOwner(workspace.owner.login);
+  const isCollaborator = workspace.owner.login !== user.login;
+  const url = `/workspace/${workspace.owner.login}/${workspace.name.replace("anotado-", "")}`;
 
   return (
     <Link
@@ -33,9 +62,9 @@ const WorkspaceCard = ({
       </div>
 
       <div>
-        <h3 className="font-bold text-lg text-foreground mb-1">{name}</h3>
+        <h3 className="font-bold text-lg text-foreground mb-1">{prettyName}</h3>
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <User size={16} />
+          <UserIcon size={16} />
           <span>{prettyOwner}</span>
         </div>
       </div>
