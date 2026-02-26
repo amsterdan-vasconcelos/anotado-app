@@ -125,23 +125,7 @@ export function ShareWorkspaceModal({
             ) : (
               <ul className="flex flex-col gap-3">
                 {collaborators.map((collab) => (
-                  <li key={collab.id} className="flex items-center gap-3">
-                    <Image
-                      src={collab.avatar_url}
-                      alt={collab.login}
-                      width={32}
-                      height={32}
-                      className="rounded-full bg-muted"
-                    />
-                    <span className="text-sm font-medium text-foreground">
-                      {collab.login}
-                    </span>
-                    {collab.login === owner && (
-                      <span className="ml-auto bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full text-xs font-medium">
-                        Proprietário
-                      </span>
-                    )}
-                  </li>
+                  <CollaboratorCard key={collab.id} collaborator={collab} />
                 ))}
               </ul>
             )}
@@ -151,3 +135,32 @@ export function ShareWorkspaceModal({
     </div>
   );
 }
+
+type CollaboratorCardProps = {
+  collaborator: Collaborator;
+  owner: string;
+};
+
+const CollaboratorCard = ({ collaborator, owner }: CollaboratorCardProps) => {
+  console.log(collaborator.avatar_url);
+
+  return (
+    <li className="flex items-center gap-3">
+      <Image
+        src={collaborator.avatar_url}
+        alt={collaborator.login}
+        width={32}
+        height={32}
+        className="rounded-full bg-muted"
+      />
+      <span className="text-sm font-medium text-foreground">
+        {collaborator.login}
+      </span>
+      {collaborator.login === owner && (
+        <span className="ml-auto bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full text-xs font-medium">
+          Proprietário
+        </span>
+      )}
+    </li>
+  );
+};
