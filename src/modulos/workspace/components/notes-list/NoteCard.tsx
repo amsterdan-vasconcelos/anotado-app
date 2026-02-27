@@ -21,7 +21,7 @@ export function NoteCard({ note, owner, workspace }: NoteCardProps) {
 
   return (
     <Link
-      href={`/workspace/${owner}/${workspace}/note/${note.category}/${note.slug}`}
+      href={`/note?owner=${owner}&workspace=${workspace}&category=${note.category}&slug=${note.slug}`}
       className={cn(
         "flex flex-col gap-3 bg-card text-card-foreground p-5 border border-border rounded-xl shadow-xs",
         "hover:shadow-md hover:border-primary/50 transition-all group",

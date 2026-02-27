@@ -37,7 +37,7 @@ export function CreateNoteClient({
     }
 
     router.push(
-      `/workspace/${owner}/${workspace}/note/${data.category}/${result.data.slug}`,
+      `/note?owner=${owner}&workspace=${workspace}&category=${data.category}&slug=${result.data.slug}`,
     );
   }
 

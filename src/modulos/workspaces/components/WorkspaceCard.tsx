@@ -47,7 +47,7 @@ const WorkspaceCard = ({ workspace, user }: WorkspaceCardProps) => {
 
   const prettyOwner = makeWorkspacePrettyOwner(workspace.owner.login);
   const isCollaborator = workspace.owner.login !== user.login;
-  const url = `/workspaces/unit?owner=${workspace.owner.login}&name=${workspace.name.replace("anotado-", "")}`;
+  const url = `/workspaces/unit?owner=${workspace.owner.login}&workspace=${workspace.name.replace("anotado-", "")}`;
 
   return (
     <Link

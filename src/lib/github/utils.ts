@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { RequestError } from "octokit";
-import { signOut } from "../auth";
 import { getOctokit } from "../octokit";
 
 const getUserInstallationStatus = async (accessToken: string) => {
@@ -25,8 +24,7 @@ const getUserInstallationStatus = async (accessToken: string) => {
     return { user, hasPersonalInstallation };
   } catch (error: unknown) {
     if (error instanceof RequestError && error.status === 401) {
-      await signOut({ redirect: false });
-      redirect("/login");
+      redirect("/api/auth/signout");
     }
 
     throw error;
@@ -48,8 +46,8 @@ const getUserWorkspaces = async (accessToken: string) => {
     return { workspaces };
   } catch (error: unknown) {
     if (error instanceof RequestError && error.status === 401) {
-      await signOut({ redirect: false });
-      redirect("/login");
+      console.log("Unauthorized access detected. Signing out user.");
+      redirect("/api/auth/signout");
     }
 
     throw error;

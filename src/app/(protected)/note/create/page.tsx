@@ -3,15 +3,16 @@ import { getRequiredSession } from "@/lib/session";
 import { CreateNoteClient } from "@/modulos/note/create/components/CreateNoteClient";
 
 interface CreateNotePageProps {
-  params: Promise<{
-    owner: string;
-    workspace: string;
-  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-const CreateNotePage = async ({ params }: CreateNotePageProps) => {
-  const { owner, workspace } = await params;
+const CreateNotePage = async ({ searchParams }: CreateNotePageProps) => {
+  const { owner, workspace } = await searchParams;
   const session = await getRequiredSession();
+
+  if (typeof owner !== "string" || typeof workspace !== "string") {
+    throw new Error("Erro ao criar nota!");
+  }
 
   const octokit = getOctokit(session.accessToken || "");
   const repo = `anotado-${workspace}`;
@@ -38,7 +39,7 @@ const CreateNotePage = async ({ params }: CreateNotePageProps) => {
       }
     }
   }
-
+  console.log("Loaded categories:", owner, workspace, categories);
   return (
     <CreateNoteClient
       owner={owner}

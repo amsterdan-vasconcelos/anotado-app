@@ -13,10 +13,10 @@ export default async function WorkspacePage({
   searchParams,
 }: WorkspacePageProps) {
   const session = await getRequiredSession();
-  const { owner: ownerSlug, name: workspaceSlug } = await searchParams;
+  const { owner: ownerSlug, workspace: workspaceSlug } = await searchParams;
 
   if (typeof ownerSlug !== "string" || typeof workspaceSlug !== "string") {
-    redirect("/");
+    redirect("/workspaces");
   }
 
   const repo = `anotado-${workspaceSlug}`;
@@ -35,7 +35,7 @@ export default async function WorkspacePage({
   ]);
 
   if (repoRes.status === "rejected") {
-    redirect("/");
+    redirect("/workspaces");
   }
 
   if (repoRes.status === "fulfilled") {
