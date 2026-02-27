@@ -16,7 +16,7 @@ const makeWorkspacePrettyName = (
 
   const prefix = "Workspace gerado pelo app de anotações: ";
 
-  if (workspaceDescription && workspaceDescription.startsWith(prefix)) {
+  if (!!workspaceDescription && workspaceDescription.startsWith(prefix)) {
     displayName = workspaceDescription.replace(prefix, "");
   }
 

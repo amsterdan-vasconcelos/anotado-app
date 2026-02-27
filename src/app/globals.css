@@ -185,3 +185,318 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* TipTap Editor */
+.tiptap {
+  line-height: 1.3;
+}
+
+.tiptap p {
+  margin: 0.25rem 0;
+  line-height: 1.3;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted-foreground);
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap:focus {
+  outline: none;
+}
+
+/* Bloco de código — tema bege/marrom estilo Notion */
+.tiptap .code-block-wrapper {
+  margin: 1rem 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.tiptap .code-block-header {
+  display: flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: var(--secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.tiptap pre {
+  background: var(--muted);
+  color: var(--foreground);
+  border-radius: 0;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  overflow-x: auto;
+  border: none;
+  margin: 0;
+}
+
+/* Código inline */
+.tiptap code {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.875em;
+}
+
+.tiptap pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+
+.tiptap blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1rem;
+  color: var(--muted-foreground);
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+.tiptap hr {
+  border: none;
+  border-top: 2px solid var(--border);
+  margin: 1.5rem 0;
+}
+
+/* ─── Syntax highlight — tema quente sobre #f7f6f3 ─── */
+/* Usar .code-block-wrapper para vencer especificidade do prose */
+
+.code-block-wrapper pre .hljs-comment,
+.code-block-wrapper pre .hljs-quote {
+  color: #a8a29e;
+  font-style: italic;
+}
+
+.code-block-wrapper pre .hljs-keyword,
+.code-block-wrapper pre .hljs-selector-tag,
+.code-block-wrapper pre .hljs-subst {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.code-block-wrapper pre .hljs-string,
+.code-block-wrapper pre .hljs-doctag,
+.code-block-wrapper pre .hljs-regexp,
+.code-block-wrapper pre .hljs-addition {
+  color: #15803d;
+}
+
+.code-block-wrapper pre .hljs-number,
+.code-block-wrapper pre .hljs-literal,
+.code-block-wrapper pre .hljs-meta .hljs-meta-string {
+  color: #c2590a;
+}
+
+.code-block-wrapper pre .hljs-title,
+.code-block-wrapper pre .hljs-section,
+.code-block-wrapper pre .hljs-selector-id,
+.code-block-wrapper pre .hljs-title.class_,
+.code-block-wrapper pre .hljs-title.function_ {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.code-block-wrapper pre .hljs-type,
+.code-block-wrapper pre .hljs-class .hljs-title {
+  color: #0e7490;
+  font-weight: 600;
+}
+
+.code-block-wrapper pre .hljs-attr,
+.code-block-wrapper pre .hljs-attribute,
+.code-block-wrapper pre .hljs-variable,
+.code-block-wrapper pre .hljs-template-variable {
+  color: #7c3aed;
+}
+
+.code-block-wrapper pre .hljs-built_in,
+.code-block-wrapper pre .hljs-name {
+  color: #0e7490;
+}
+
+.code-block-wrapper pre .hljs-symbol,
+.code-block-wrapper pre .hljs-bullet,
+.code-block-wrapper pre .hljs-meta,
+.code-block-wrapper pre .hljs-meta .hljs-keyword,
+.code-block-wrapper pre .hljs-selector-attr,
+.code-block-wrapper pre .hljs-selector-pseudo,
+.code-block-wrapper pre .hljs-link {
+  color: #78716c;
+}
+
+.code-block-wrapper pre .hljs-deletion {
+  color: #be123c;
+}
+
+.code-block-wrapper pre .hljs-emphasis {
+  font-style: italic;
+}
+
+.code-block-wrapper pre .hljs-strong {
+  font-weight: 700;
+}
+
+.code-block-wrapper pre .hljs-operator,
+.code-block-wrapper pre .hljs-punctuation {
+  color: #92400e;
+}
+
+/* ─── Visualizador de notas ─── */
+.note-content {
+  line-height: 1.3;
+}
+
+.note-content p {
+  line-height: 1.3;
+  margin: 0.25rem 0;
+}
+
+.note-content pre {
+  background: var(--muted);
+  color: var(--foreground);
+  border-radius: 0;
+  padding: 1rem 1.25rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  overflow-x: auto;
+  border: none;
+  margin: 0;
+}
+
+.note-inline-code {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.875em;
+}
+
+.code-viewer-wrapper {
+  margin: 1rem 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.code-viewer-header {
+  display: flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  background: var(--secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Syntax highlight no viewer — mesmas cores do editor */
+.code-viewer-wrapper pre .hljs-comment,
+.code-viewer-wrapper pre .hljs-quote {
+  color: #a8a29e;
+  font-style: italic;
+}
+
+.code-viewer-wrapper pre .hljs-keyword,
+.code-viewer-wrapper pre .hljs-selector-tag,
+.code-viewer-wrapper pre .hljs-subst {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.code-viewer-wrapper pre .hljs-string,
+.code-viewer-wrapper pre .hljs-doctag,
+.code-viewer-wrapper pre .hljs-regexp,
+.code-viewer-wrapper pre .hljs-addition {
+  color: #15803d;
+}
+
+.code-viewer-wrapper pre .hljs-number,
+.code-viewer-wrapper pre .hljs-literal,
+.code-viewer-wrapper pre .hljs-meta .hljs-meta-string {
+  color: #c2590a;
+}
+
+.code-viewer-wrapper pre .hljs-title,
+.code-viewer-wrapper pre .hljs-section,
+.code-viewer-wrapper pre .hljs-selector-id,
+.code-viewer-wrapper pre .hljs-title.class_,
+.code-viewer-wrapper pre .hljs-title.function_ {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.code-viewer-wrapper pre .hljs-type,
+.code-viewer-wrapper pre .hljs-class .hljs-title {
+  color: #0e7490;
+  font-weight: 600;
+}
+
+.code-viewer-wrapper pre .hljs-attr,
+.code-viewer-wrapper pre .hljs-attribute,
+.code-viewer-wrapper pre .hljs-variable,
+.code-viewer-wrapper pre .hljs-template-variable {
+  color: #7c3aed;
+}
+
+.code-viewer-wrapper pre .hljs-built_in,
+.code-viewer-wrapper pre .hljs-name {
+  color: #0e7490;
+}
+
+.code-viewer-wrapper pre .hljs-symbol,
+.code-viewer-wrapper pre .hljs-bullet,
+.code-viewer-wrapper pre .hljs-meta,
+.code-viewer-wrapper pre .hljs-meta .hljs-keyword,
+.code-viewer-wrapper pre .hljs-selector-attr,
+.code-viewer-wrapper pre .hljs-selector-pseudo,
+.code-viewer-wrapper pre .hljs-link {
+  color: #78716c;
+}
+
+.code-viewer-wrapper pre .hljs-deletion {
+  color: #be123c;
+}
+
+.code-viewer-wrapper pre .hljs-emphasis {
+  font-style: italic;
+}
+
+.code-viewer-wrapper pre .hljs-strong {
+  font-weight: 700;
+}
+
+.code-viewer-wrapper pre .hljs-operator,
+.code-viewer-wrapper pre .hljs-punctuation {
+  color: #92400e;
+}
+
+/* Headings proporcionais dentro do editor */
+.tiptap h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.tiptap h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 1rem 0 0.4rem;
+}
+
+.tiptap h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0.875rem 0 0.35rem;
+}

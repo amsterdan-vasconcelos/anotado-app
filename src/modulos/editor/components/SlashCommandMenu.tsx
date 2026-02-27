@@ -53,7 +53,7 @@ export function SlashCommandMenu({
               }`}
             >
               <div
-                className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md border ${
+                className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-md border ${
                   isSelected
                     ? "border-blue-200 bg-blue-100 text-blue-600"
                     : "border-gray-200 bg-gray-50 text-gray-500"
