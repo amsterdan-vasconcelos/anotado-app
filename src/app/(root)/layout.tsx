@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { FooterRoot } from "./_components/Footer";
-import { HeaderRoot } from "./_components/Header";
+import { FooterRoot } from "@/modulos/root/components/Footer";
+import { HeaderRoot } from "@/modulos/root/components/Header";
 
 export const metadata: Metadata = {
   title: "Anotado - Home",

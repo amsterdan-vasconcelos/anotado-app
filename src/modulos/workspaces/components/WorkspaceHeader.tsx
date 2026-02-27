@@ -42,7 +42,7 @@ export function HomeHeader({
 
         {hasPersonalInstallation ? (
           <Link
-            href="/workspace-create"
+            href="/workspaces/create"
             className={cn(buttonVariants({ variant: "default", size: "lg" }))}
           >
             <Plus size={16} />

@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { formatDisplayName } from "@/lib/string-util";
 import { cn } from "@/lib/utils";
 import { WorkspaceHeaderActions } from "./WorkspaceHeaderActions";
@@ -18,20 +18,20 @@ export function WorkspaceHeader({
   workspaceSlug,
   displayName,
 }: WorkspaceHeaderProps) {
+  const router = useRouter();
   const prettyOwner = formatDisplayName(owner);
 
   return (
     <header className="mb-8">
-      <Link
-        href="/"
-        className={cn(
-          buttonVariants({ variant: "ghost", size: "sm" }),
-          "mb-4 -ml-2 gap-2 text-muted-foreground",
-        )}
+      <Button
+        variant={"ghost"}
+        size={"sm"}
+        onClick={() => router.back()}
+        className={cn("mb-4 -ml-2 gap-2 text-muted-foreground")}
       >
         <ArrowLeft size={16} />
         Voltar aos Workspaces
-      </Link>
+      </Button>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

@@ -1,10 +1,10 @@
 import { Settings } from "lucide-react";
 import { redirect } from "next/navigation";
-import { WorkspaceEmptyState } from "@/components/workspace/WorkspaceEmptyState";
-import { WorkspaceGrid } from "@/components/workspace/WorkspaceGrid";
-import { HomeHeader } from "@/components/workspace/WorkspaceHeader";
 import { auth } from "@/lib/auth";
 import { github } from "@/lib/github";
+import { WorkspaceEmptyState } from "@/modulos/workspaces/components/WorkspaceEmptyState";
+import { WorkspaceGrid } from "@/modulos/workspaces/components/WorkspaceGrid";
+import { HomeHeader } from "@/modulos/workspaces/components/WorkspaceHeader";
 import type { CustomSession } from "@/types/auth";
 
 const HomePage = async () => {

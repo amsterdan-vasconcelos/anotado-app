@@ -42,7 +42,7 @@ export function WorkspaceHeaderActions({
         />
 
         <Link
-          href={`/workspace/${owner}/${workspaceSlug}/create`}
+          href={`/note/create?owner=${owner}&workspace=${workspaceSlug}`}
           className={cn(buttonVariants({ variant: "default", size: "lg" }))}
         >
           <Plus size={16} />

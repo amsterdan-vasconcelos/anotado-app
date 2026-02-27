@@ -2,19 +2,22 @@ import { redirect } from "next/navigation";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 import { formatDisplayName } from "@/lib/string-util";
-import { WorkspaceHeader } from "./_components/workspace-header";
-import { WorkspaceNotesViewer } from "./_components/workspace-notes-viewer";
+import { WorkspaceHeader } from "@/modulos/workspace/components/header";
+import { WorkspaceNotesViewer } from "@/modulos/workspace/components/notes-list";
 
 interface WorkspacePageProps {
-  params: Promise<{
-    owner: string;
-    workspace: string;
-  }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function WorkspacePage({ params }: WorkspacePageProps) {
-  const { owner: ownerSlug, workspace: workspaceSlug } = await params;
+export default async function WorkspacePage({
+  searchParams,
+}: WorkspacePageProps) {
   const session = await getRequiredSession();
+  const { owner: ownerSlug, name: workspaceSlug } = await searchParams;
+
+  if (typeof ownerSlug !== "string" || typeof workspaceSlug !== "string") {
+    redirect("/");
+  }
 
   const repo = `anotado-${workspaceSlug}`;
   const octokit = getOctokit(session.accessToken || "");
@@ -38,7 +41,7 @@ export default async function WorkspacePage({ params }: WorkspacePageProps) {
   if (repoRes.status === "fulfilled") {
     const description = repoRes.value.data.description;
     const prefix = "Workspace gerado pelo app de anotações: ";
-    if (description && description.startsWith(prefix)) {
+    if (!!description && description.startsWith(prefix)) {
       displayName = description.replace(prefix, "");
     }
   }

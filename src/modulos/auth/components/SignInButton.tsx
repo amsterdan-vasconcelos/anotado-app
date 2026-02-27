@@ -12,7 +12,7 @@ export function SignInButton({
 }: SignInButtonProps) {
   const signInAction = async () => {
     "use server";
-    await signIn("github", { redirectTo: "/workspace-collection" });
+    await signIn("github", { redirectTo: "/workspaces" });
   };
 
   return (

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { SignInButton } from "@/components/auth/SignInButton";
 import { auth } from "@/lib/auth";
+import { SignInButton } from "@/modulos/auth/components/SignInButton";
 import type { CustomSession } from "@/types/auth";
 
 export default async function LoginPage() {

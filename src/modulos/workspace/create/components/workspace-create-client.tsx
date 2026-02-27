@@ -1,14 +1,12 @@
 "use client";
 
 import { ArrowLeft, Loader2, Save } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiCreateWorkspace } from "@/lib/api-client";
-import { cn } from "@/lib/utils";
 
 export function CreateWorkspaceClient() {
   const router = useRouter();
@@ -59,13 +57,10 @@ export function CreateWorkspaceClient() {
       </div>
 
       <div className="flex items-center gap-3 pt-2">
-        <Link
-          href="/"
-          className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
-        >
+        <Button variant={"outline"} size={"lg"} onClick={() => router.back()}>
           <ArrowLeft size={16} />
           Cancelar
-        </Link>
+        </Button>
         <Button
           type="submit"
           size="lg"
