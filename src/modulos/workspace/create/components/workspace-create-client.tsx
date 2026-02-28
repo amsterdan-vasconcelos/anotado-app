@@ -29,7 +29,9 @@ export function CreateWorkspaceClient() {
       return;
     }
 
-    router.push(`/workspace/${result.data.owner}/${result.data.slug}`);
+    router.push(
+      `/workspace/unit?owner=${result.data.owner}&workspace=${result.data.slug}`,
+    );
     router.refresh();
   }
 
