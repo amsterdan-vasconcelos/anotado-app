@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { formatDisplayName } from "@/lib/string-util";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,6 @@ export function WorkspaceHeader({
   workspaceSlug,
   displayName,
 }: WorkspaceHeaderProps) {
-  const router = useRouter();
   const prettyOwner = formatDisplayName(owner);
 
   return (
@@ -26,7 +25,7 @@ export function WorkspaceHeader({
       <Button
         variant={"ghost"}
         size={"sm"}
-        onClick={() => router.back()}
+        onClick={() => redirect("/workspaces")}
         className={cn("mb-4 -ml-2 gap-2 text-muted-foreground")}
       >
         <ArrowLeft size={16} />
