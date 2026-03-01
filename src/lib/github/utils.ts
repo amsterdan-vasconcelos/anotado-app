@@ -2,6 +2,26 @@ import { redirect } from "next/navigation";
 import { RequestError } from "octokit";
 import { getOctokit } from "../octokit";
 
+const checkHasWorkspaceIndex = async (
+  octokit: ReturnType<typeof getOctokit>,
+  owner: string,
+  repo: string,
+) => {
+  try {
+    await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: "workspace-index.json",
+    });
+    return true;
+  } catch (error: unknown) {
+    if (error instanceof RequestError && error.status === 404) {
+      return false;
+    }
+    throw error;
+  }
+};
+
 const getUserInstallationStatus = async (accessToken: string) => {
   const octokit = getOctokit(accessToken);
 
@@ -41,7 +61,22 @@ const getUserWorkspaces = async (accessToken: string) => {
       per_page: 100,
     });
 
-    const workspaces = repos.filter((repo) => repo.name.startsWith("anotado-"));
+    const _workspaces = repos.filter((repo) =>
+      repo.name.startsWith("anotado-"),
+    );
+
+    const workspaceChecks = await Promise.all(
+      _workspaces.map(async (repo) => {
+        const isValid = await checkHasWorkspaceIndex(
+          octokit,
+          repo.owner.login,
+          repo.name,
+        );
+        return isValid ? repo : null;
+      }),
+    );
+
+    const workspaces = workspaceChecks.filter((repo) => repo !== null);
 
     return { workspaces };
   } catch (error: unknown) {

@@ -33,7 +33,7 @@ export function DeleteWorkspaceModal({
       return;
     }
 
-    router.push("/");
+    router.push("/workspaces");
     router.refresh();
   }
 

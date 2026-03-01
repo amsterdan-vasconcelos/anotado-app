@@ -153,7 +153,7 @@ export async function apiDeleteWorkspace(
   workspace: string,
 ): Promise<ApiResult> {
   try {
-    const res = await fetch("/api/workspaces", {
+    const res = await fetch("/api/workspace", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ owner, workspace }),
