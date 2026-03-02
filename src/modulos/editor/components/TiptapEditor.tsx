@@ -16,11 +16,7 @@ import {
   Quote,
   Strikethrough,
 } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { CodeBlockComponent } from "./CodeBlockComponent";
-
-const lowlight = createLowlight(common);
-
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Markdown } from "tiptap-markdown";
 import {
   createSlashExtension,
@@ -28,7 +24,10 @@ import {
   type SlashCommandItem,
   type SlashMenuState,
 } from "../util/command";
+import { CodeBlockComponent } from "./CodeBlockComponent";
 import { SlashCommandMenu } from "./SlashCommandMenu";
+
+const lowlight = createLowlight(common);
 
 interface TipTapEditorProps {
   value: string;
@@ -45,6 +44,14 @@ export function TipTapEditor({
   className,
   contentClassName,
 }: TipTapEditorProps) {
+  // ─── Stale-closure fix: sempre chama a versão mais recente de onChange ─────
+  // useEditor captura o callback apenas na montagem; ao atualizar o ref a cada
+  // render garantimos que o editor sempre use a função atual sem precisar
+  // recriar a instância do editor.
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  // ─── Slash command state ──────────────────────────────────────────────────
   const [slashMenu, setSlashMenu] = useState<SlashMenuState>(
     defaultSlashMenuState,
   );
@@ -129,6 +136,7 @@ export function TipTapEditor({
     [],
   );
 
+  // ─── Editor instance ──────────────────────────────────────────────────────
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -145,17 +153,17 @@ export function TipTapEditor({
         transformPastedText: true,
         transformCopiedText: true,
       }),
-      Placeholder.configure({
-        placeholder,
-      }),
+      Placeholder.configure({ placeholder }),
       slashExtension,
     ],
     content: value,
     onUpdate: ({ editor: ed }) => {
+      // Usa o ref para chamar sempre a versão mais recente de onChange,
+      // evitando stale closures sem precisar recriar o editor.
       const storage = ed.storage as unknown as {
         markdown: { getMarkdown: () => string };
       };
-      onChange(storage.markdown.getMarkdown());
+      onChangeRef.current(storage.markdown.getMarkdown());
     },
     editorProps: {
       attributes: {
@@ -167,6 +175,14 @@ export function TipTapEditor({
     immediatelyRender: false,
   });
 
+  // ─── Libera o editor ao desmontar ─────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      editor?.destroy();
+    };
+  }, [editor]);
+
+  // ─── Slash command handlers ───────────────────────────────────────────────
   function handleExecuteCommand(item: SlashCommandItem) {
     if (slashMenu.executeCommand) {
       slashMenu.executeCommand(item);
@@ -178,6 +194,7 @@ export function TipTapEditor({
     updateSlashMenu((prev) => ({ ...prev, selectedIndex: index }));
   }
 
+  // ─── Bubble menu button styles ────────────────────────────────────────────
   const bubbleBtnBase =
     "p-1.5 rounded transition-colors hover:bg-accent text-muted-foreground hover:text-accent-foreground";
   const bubbleBtnActive = "bg-accent text-foreground";
@@ -193,17 +210,22 @@ export function TipTapEditor({
         <BubbleMenu
           editor={editor}
           options={{ placement: "top-start" }}
-          shouldShow={({ state }) => {
+          shouldShow={({ editor: e, state }) => {
+            // Usa o editor e o state vindos dos parâmetros para evitar
+            // qualquer problema de closure com a variável externa.
             const { selection } = state;
             if (selection.empty) return false;
-            if (editor.isActive("codeBlock")) return false;
+            if (e.isActive("codeBlock")) return false;
             return true;
           }}
         >
           <div className="flex items-center gap-0.5 bg-card border border-border rounded-lg shadow-md p-1">
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleBold().run()}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().toggleBold().run();
+              }}
               className={`${bubbleBtnBase} ${editor.isActive("bold") ? bubbleBtnActive : ""}`}
               title="Negrito (Ctrl+B)"
             >
@@ -211,7 +233,10 @@ export function TipTapEditor({
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleItalic().run()}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().toggleItalic().run();
+              }}
               className={`${bubbleBtnBase} ${editor.isActive("italic") ? bubbleBtnActive : ""}`}
               title="Itálico (Ctrl+I)"
             >
@@ -219,7 +244,10 @@ export function TipTapEditor({
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleStrike().run()}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().toggleStrike().run();
+              }}
               className={`${bubbleBtnBase} ${editor.isActive("strike") ? bubbleBtnActive : ""}`}
               title="Tachado"
             >
@@ -227,7 +255,10 @@ export function TipTapEditor({
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleCode().run()}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().toggleCode().run();
+              }}
               className={`${bubbleBtnBase} ${editor.isActive("code") ? bubbleBtnActive : ""}`}
               title="Código inline"
             >
@@ -238,9 +269,10 @@ export function TipTapEditor({
 
             <button
               type="button"
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 1 }).run()
-              }
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().toggleHeading({ level: 1 }).run();
+              }}
               className={`${bubbleBtnBase} ${editor.isActive("heading", { level: 1 }) ? bubbleBtnActive : ""}`}
               title="Título 1"
             >
@@ -248,9 +280,10 @@ export function TipTapEditor({
             </button>
             <button
               type="button"
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 2 }).run()
-              }
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().toggleHeading({ level: 2 }).run();
+              }}
               className={`${bubbleBtnBase} ${editor.isActive("heading", { level: 2 }) ? bubbleBtnActive : ""}`}
               title="Título 2"
             >
@@ -258,9 +291,10 @@ export function TipTapEditor({
             </button>
             <button
               type="button"
-              onClick={() =>
-                editor.chain().focus().toggleHeading({ level: 3 }).run()
-              }
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().toggleHeading({ level: 3 }).run();
+              }}
               className={`${bubbleBtnBase} ${editor.isActive("heading", { level: 3 }) ? bubbleBtnActive : ""}`}
               title="Título 3"
             >
@@ -271,7 +305,10 @@ export function TipTapEditor({
 
             <button
               type="button"
-              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().toggleBlockquote().run();
+              }}
               className={`${bubbleBtnBase} ${editor.isActive("blockquote") ? bubbleBtnActive : ""}`}
               title="Citação"
             >

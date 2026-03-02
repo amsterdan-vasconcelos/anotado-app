@@ -47,6 +47,7 @@ export function CreateNoteClient({
 
   return (
     <NoteForm
+      mode="create"
       categories={categories}
       onSubmit={handleCreateNote}
       isLoading={isLoading}

@@ -100,6 +100,7 @@ export function EditNoteClient({
   return (
     <>
       <NoteForm
+        mode="edit"
         categories={categories}
         initialData={initialData}
         onSubmit={(data) => handleUpdateNote(data)}

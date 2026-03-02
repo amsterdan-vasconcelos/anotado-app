@@ -3,8 +3,10 @@
 import {
   AlertCircle,
   ArrowLeft,
+  BookOpen,
   Clock,
   Edit3,
+  Eye,
   GitCommit,
   Loader2,
   PanelRightClose,
@@ -138,274 +140,310 @@ export function NoteViewerClient({
     commits.length > 0 && activeSha !== commits[0].sha;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Coluna esquerda — botão voltar */}
-      <aside className="w-14 shrink-0 flex flex-col items-center pt-6 border-r border-border bg-card">
-        <Link
-          href={`/workspaces/unit?owner=${owner}&workspace=${workspace}`}
-          title="Voltar ao workspace"
-          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-        >
-          <ArrowLeft size={20} />
-        </Link>
-      </aside>
+    <div className="flex flex-col h-screen overflow-hidden bg-background">
+      {/* ── Top mode bar — Leitura ────────────────────────────────────────── */}
+      <div className="shrink-0 flex items-center gap-2.5 px-5 h-9 border-b bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800">
+        <Eye size={13} className="text-sky-600 dark:text-sky-400" />
+        <span className="text-xs font-semibold tracking-wide text-sky-700 dark:text-sky-300">
+          Leitura
+        </span>
+        <span className="text-xs text-muted-foreground/60">·</span>
+        <span className="text-xs text-muted-foreground truncate max-w-xs">
+          {initialTitle}
+        </span>
+        <span className="text-xs text-muted-foreground/60">·</span>
+        <span className="text-xs text-muted-foreground/70">{category}</span>
+      </div>
 
-      {/* Coluna central — papel de leitura */}
-      <main className="flex-1 overflow-y-auto bg-muted/30 flex justify-center py-12 px-6">
-        <div className="w-full max-w-3xl flex flex-col gap-4">
-          {isViewingOldVersion && (
-            <div className="flex items-start gap-3 bg-secondary border border-border p-4 rounded-xl">
-              <AlertCircle size={18} className="text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Modo histórico — versão{" "}
-                  <span className="font-mono">{activeSha.substring(0, 7)}</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Você está visualizando uma versão antiga. Para editar, volte
-                  para a versão atual.
-                </p>
+      {/* ── Three-column layout ───────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* ── Left sidebar — back button + reading mode indicator ─────────── */}
+        <aside className="w-14 shrink-0 flex flex-col items-center pt-6 gap-4 border-r bg-sky-50/60 dark:bg-sky-950/20 border-sky-100 dark:border-sky-900">
+          <Link
+            href={`/workspaces/unit?owner=${owner}&workspace=${workspace}`}
+            title="Voltar ao workspace"
+            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          >
+            <ArrowLeft size={20} />
+          </Link>
+
+          {/* Mode icon pill */}
+          <div
+            className="flex flex-col items-center gap-1 p-2 rounded-lg text-sky-600 dark:text-sky-400"
+            title="Modo Leitura"
+          >
+            <BookOpen size={16} />
+            <span
+              className="text-[9px] font-bold tracking-widest uppercase text-sky-600 dark:text-sky-400"
+              style={{ writingMode: "vertical-rl" }}
+            >
+              Lendo
+            </span>
+          </div>
+        </aside>
+
+        {/* ── Main — reading area ──────────────────────────────────────────── */}
+        <main className="flex-1 overflow-y-auto bg-muted/30 flex justify-center py-12 px-6">
+          <div className="w-full max-w-3xl flex flex-col gap-4">
+            {isViewingOldVersion && (
+              <div className="flex items-start gap-3 bg-secondary border border-border p-4 rounded-xl">
+                <AlertCircle
+                  size={18}
+                  className="text-primary mt-0.5 shrink-0"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Modo histórico — versão{" "}
+                    <span className="font-mono">
+                      {activeSha.substring(0, 7)}
+                    </span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Você está visualizando uma versão antiga. Para editar, volte
+                    para a versão atual.
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {versionError && (
-            <div className="flex items-start gap-3 bg-destructive/10 border border-destructive/20 p-4 rounded-xl">
-              <AlertCircle
-                size={18}
-                className="text-destructive mt-0.5 shrink-0"
-              />
-              <p className="text-sm text-destructive">{versionError}</p>
+            {versionError && (
+              <div className="flex items-start gap-3 bg-destructive/10 border border-destructive/20 p-4 rounded-xl">
+                <AlertCircle
+                  size={18}
+                  className="text-destructive mt-0.5 shrink-0"
+                />
+                <p className="text-sm text-destructive">{versionError}</p>
+              </div>
+            )}
+
+            <div
+              className={cn(
+                "bg-card rounded-2xl shadow-md ring-1 ring-border/60 min-h-full px-10 py-10 transition-opacity",
+                isFetchingVersion || isDeleting ? "opacity-50" : "opacity-100",
+              )}
+            >
+              <MarkdownViewer content={displayedContent} />
             </div>
+          </div>
+        </main>
+
+        {/* ── Right sidebar — collapsible history + actions ────────────────── */}
+        <aside
+          className={cn(
+            "shrink-0 flex flex-col border-l border-border bg-card overflow-hidden",
+            "transition-[width] duration-200 ease-in-out",
+            sidebarOpen ? "w-72" : "w-14",
           )}
+        >
+          <div
+            className={cn(
+              "pt-6 shrink-0 flex",
+              sidebarOpen ? "px-6 justify-end" : "justify-center",
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setSidebarOpen((v) => !v)}
+              title={sidebarOpen ? "Fechar painel" : "Abrir painel"}
+              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+            >
+              {sidebarOpen ? (
+                <PanelRightClose size={20} />
+              ) : (
+                <PanelRightOpen size={20} />
+              )}
+            </button>
+          </div>
 
           <div
             className={cn(
-              "bg-card rounded-2xl shadow-md ring-1 ring-border/60 min-h-full px-10 py-10 transition-opacity",
-              isFetchingVersion || isDeleting ? "opacity-50" : "opacity-100",
+              "flex flex-col min-h-0 flex-1 transition-opacity duration-150",
+              sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none",
             )}
           >
-            <MarkdownViewer content={displayedContent} />
-          </div>
-        </div>
-      </main>
+            <div className="px-6 pt-5 pb-6 flex flex-col gap-6 shrink-0">
+              <div>
+                <h2 className="text-base font-semibold text-foreground leading-snug">
+                  {initialTitle}
+                </h2>
+                <div className="mt-2">
+                  <Badge variant="secondary">{category}</Badge>
+                </div>
+              </div>
 
-      {/* Coluna direita — colapsável */}
-      <aside
-        className={cn(
-          "shrink-0 flex flex-col border-l border-border bg-card overflow-hidden",
-          "transition-[width] duration-200 ease-in-out",
-          sidebarOpen ? "w-72" : "w-14",
-        )}
-      >
-        <div
-          className={cn(
-            "pt-6 shrink-0 flex",
-            sidebarOpen ? "px-6 justify-end" : "justify-center",
-          )}
-        >
-          <button
-            type="button"
-            onClick={() => setSidebarOpen((v) => !v)}
-            title={sidebarOpen ? "Fechar painel" : "Abrir painel"}
-            className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-          >
-            {sidebarOpen ? (
-              <PanelRightClose size={20} />
-            ) : (
-              <PanelRightOpen size={20} />
-            )}
-          </button>
-        </div>
+              <Separator />
 
-        <div
-          className={cn(
-            "flex flex-col min-h-0 flex-1 transition-opacity duration-150",
-            sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none",
-          )}
-        >
-          <div className="px-6 pt-5 pb-6 flex flex-col gap-6 shrink-0">
-            <div>
-              <h2 className="text-base font-semibold text-foreground leading-snug">
-                {initialTitle}
-              </h2>
-              <div className="mt-2">
-                <Badge variant="secondary">{category}</Badge>
+              <div className="flex flex-col gap-2">
+                {!isViewingOldVersion ? (
+                  <>
+                    <Link
+                      href={`/note/edit?owner=${owner}&workspace=${workspace}&category=${category}&slug=${slug}`}
+                      className={cn(
+                        buttonVariants({ variant: "default", size: "lg" }),
+                        "w-full justify-center",
+                      )}
+                    >
+                      <Edit3 size={14} />
+                      Editar Nota
+                    </Link>
+
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="lg"
+                      onClick={() => setDeleteConfirmOpen(true)}
+                      disabled={isDeleting}
+                      className="w-full"
+                    >
+                      {isDeleting ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                      {isDeleting ? "Excluindo..." : "Excluir Nota"}
+                    </Button>
+
+                    {deleteError && (
+                      <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+                        {deleteError}
+                      </p>
+                    )}
+
+                    <AlertDialog
+                      open={deleteConfirmOpen}
+                      onOpenChange={setDeleteConfirmOpen}
+                    >
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir nota?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir{" "}
+                            <strong className="text-foreground">
+                              "{initialTitle}"
+                            </strong>
+                            ? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            variant="destructive"
+                            onClick={handleDeleteNote}
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="lg"
+                    onClick={() => handleSelectVersion(commits[0].sha)}
+                    className="w-full"
+                  >
+                    <RotateCcw size={14} />
+                    Voltar para Atual
+                  </Button>
+                )}
+              </div>
+
+              <Separator />
+
+              <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                <Clock size={14} className="text-primary" />
+                Histórico de Versões
               </div>
             </div>
 
-            <Separator />
-
-            <div className="flex flex-col gap-2">
-              {!isViewingOldVersion ? (
-                <>
-                  <Link
-                    href={`/note/edit?owner=${owner}&workspace=${workspace}&category=${category}&slug=${slug}`}
-                    className={cn(
-                      buttonVariants({ variant: "default", size: "lg" }),
-                      "w-full justify-center",
-                    )}
-                  >
-                    <Edit3 size={14} />
-                    Editar Nota
-                  </Link>
-
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="lg"
-                    onClick={() => setDeleteConfirmOpen(true)}
-                    disabled={isDeleting}
-                    className="w-full"
-                  >
-                    {isDeleting ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <Trash2 size={14} />
-                    )}
-                    {isDeleting ? "Excluindo..." : "Excluir Nota"}
-                  </Button>
-
-                  {deleteError && (
-                    <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
-                      {deleteError}
-                    </p>
-                  )}
-
-                  <AlertDialog
-                    open={deleteConfirmOpen}
-                    onOpenChange={setDeleteConfirmOpen}
-                  >
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir nota?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja excluir{" "}
-                          <strong className="text-foreground">
-                            "{initialTitle}"
-                          </strong>
-                          ? Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          variant="destructive"
-                          onClick={handleDeleteNote}
-                        >
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
+            {/* Scrollable commits list */}
+            <div className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col gap-2">
+              {isLoadingHistory ? (
+                [1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="h-16 rounded-lg bg-muted/60 animate-pulse"
+                  />
+                ))
+              ) : historyError ? (
+                <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
+                  {historyError}
+                </p>
+              ) : commits.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Nenhuma versão encontrada.
+                </p>
               ) : (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="lg"
-                  onClick={() => handleSelectVersion(commits[0].sha)}
-                  className="w-full"
-                >
-                  <RotateCcw size={14} />
-                  Voltar para Atual
-                </Button>
+                commits.map((commit, index) => {
+                  const isLatest = index === 0;
+                  const isActive = commit.sha === activeSha;
+                  const date = new Date(commit.date).toLocaleString("pt-BR");
+
+                  return (
+                    <button
+                      key={commit.sha}
+                      type="button"
+                      onClick={() => handleSelectVersion(commit.sha)}
+                      className={cn(
+                        "text-left p-3 rounded-lg border transition-all w-full",
+                        isActive
+                          ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30"
+                          : "border-border hover:border-border/80 hover:bg-muted/50",
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="font-medium text-foreground text-xs truncate">
+                          {commit.message}
+                        </span>
+                        {isLatest && (
+                          <Badge
+                            variant="default"
+                            className="shrink-0 text-[10px]"
+                          >
+                            HEAD
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        {commit.authorAvatar ? (
+                          <Image
+                            src={commit.authorAvatar}
+                            alt={commit.authorName}
+                            width={16}
+                            height={16}
+                            className="rounded-full shrink-0"
+                          />
+                        ) : (
+                          <div className="w-4 h-4 rounded-full bg-muted border border-border flex items-center justify-center shrink-0">
+                            <span className="text-muted-foreground font-bold text-[8px]">
+                              {commit.authorName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <span className="text-muted-foreground text-xs truncate">
+                          {commit.authorName}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 text-muted-foreground text-[10px]">
+                        <GitCommit size={10} />
+                        <span className="font-mono">
+                          {commit.sha.substring(0, 7)}
+                        </span>
+                        <span className="mx-0.5">·</span>
+                        <span>{date}</span>
+                      </div>
+                    </button>
+                  );
+                })
               )}
             </div>
-
-            <Separator />
-
-            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <Clock size={14} className="text-primary" />
-              Histórico de Versões
-            </div>
           </div>
-
-          {/* Seção scrollável: commits */}
-          <div className="flex-1 overflow-y-auto px-6 pb-6 flex flex-col gap-2">
-            {isLoadingHistory ? (
-              [1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-16 rounded-lg bg-muted/60 animate-pulse"
-                />
-              ))
-            ) : historyError ? (
-              <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
-                {historyError}
-              </p>
-            ) : commits.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                Nenhuma versão encontrada.
-              </p>
-            ) : (
-              commits.map((commit, index) => {
-                const isLatest = index === 0;
-                const isActive = commit.sha === activeSha;
-                const date = new Date(commit.date).toLocaleString("pt-BR");
-
-                return (
-                  <button
-                    key={commit.sha}
-                    type="button"
-                    onClick={() => handleSelectVersion(commit.sha)}
-                    className={cn(
-                      "text-left p-3 rounded-lg border transition-all w-full",
-                      isActive
-                        ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30"
-                        : "border-border hover:border-border/80 hover:bg-muted/50",
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="font-medium text-foreground text-xs truncate">
-                        {commit.message}
-                      </span>
-                      {isLatest && (
-                        <Badge
-                          variant="default"
-                          className="shrink-0 text-[10px]"
-                        >
-                          HEAD
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      {commit.authorAvatar ? (
-                        <Image
-                          src={commit.authorAvatar}
-                          alt={commit.authorName}
-                          width={16}
-                          height={16}
-                          className="rounded-full shrink-0"
-                        />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full bg-muted border border-border flex items-center justify-center shrink-0">
-                          <span className="text-muted-foreground font-bold text-[8px]">
-                            {commit.authorName.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <span className="text-muted-foreground text-xs truncate">
-                        {commit.authorName}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 text-muted-foreground text-[10px]">
-                      <GitCommit size={10} />
-                      <span className="font-mono">
-                        {commit.sha.substring(0, 7)}
-                      </span>
-                      <span className="mx-0.5">•</span>
-                      <span>{date}</span>
-                    </div>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      </aside>
+        </aside>
+      </div>
     </div>
   );
 }
