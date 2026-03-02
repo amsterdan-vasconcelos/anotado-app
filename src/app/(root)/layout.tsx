@@ -3,8 +3,9 @@ import { FooterRoot } from "@/modulos/root/components/Footer";
 import { HeaderRoot } from "@/modulos/root/components/Header";
 
 export const metadata: Metadata = {
-  title: "Anotado - Home",
-  description: "Crie e compartilhe suas anotações com quem quiser, DE GRAÇA!",
+  title: "Ônix — sabor obsidian",
+  description:
+    "Anote, organize e compartilhe com o GitHub como backend. Grátis, pra sempre.",
 };
 
 type RootLayoutProps = Readonly<{
@@ -15,7 +16,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <div className="flex flex-col min-h-dvh">
       <HeaderRoot />
-      <main className="flex-1 grid w-full max-w-300 m-auto">{children}</main>
+      <main className="flex-1 w-full">{children}</main>
       <FooterRoot />
     </div>
   );
