@@ -19,9 +19,9 @@ export function WorkspaceHeaderActions({
   owner,
   workspaceSlug,
 }: WorkspaceHeaderActionsProps) {
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
 
   return (
     <>
@@ -30,15 +30,15 @@ export function WorkspaceHeaderActions({
           type="button"
           variant="outline"
           size="lg"
-          onClick={() => setIsCategoryModalOpen(true)}
+          onClick={() => setCategoryOpen(true)}
         >
           <Tags size={16} />
           Categorias
         </Button>
 
         <WorkspaceActionsMenu
-          onShareClick={() => setIsShareModalOpen(true)}
-          onDeleteClick={() => setIsDeleteAlertOpen(true)}
+          onShareClick={() => setShareOpen(true)}
+          onDeleteClick={() => setDeleteOpen(true)}
         />
 
         <Link
@@ -50,29 +50,26 @@ export function WorkspaceHeaderActions({
         </Link>
       </div>
 
-      {isShareModalOpen && (
-        <ShareWorkspaceModal
-          owner={owner}
-          workspace={workspaceSlug}
-          onClose={() => setIsShareModalOpen(false)}
-        />
-      )}
+      <CategoryManagerModal
+        owner={owner}
+        workspace={workspaceSlug}
+        open={categoryOpen}
+        onOpenChange={setCategoryOpen}
+      />
 
-      {isDeleteAlertOpen && (
-        <DeleteWorkspaceModal
-          owner={owner}
-          workspace={workspaceSlug}
-          onClose={() => setIsDeleteAlertOpen(false)}
-        />
-      )}
+      <ShareWorkspaceModal
+        owner={owner}
+        workspace={workspaceSlug}
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+      />
 
-      {isCategoryModalOpen && (
-        <CategoryManagerModal
-          owner={owner}
-          workspace={workspaceSlug}
-          onClose={() => setIsCategoryModalOpen(false)}
-        />
-      )}
+      <DeleteWorkspaceModal
+        owner={owner}
+        workspace={workspaceSlug}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+      />
     </>
   );
 }

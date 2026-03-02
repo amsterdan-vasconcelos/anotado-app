@@ -1,4 +1,5 @@
 import { FileQuestion } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { NoteCard } from "./NoteCard";
 
 interface Note {
@@ -17,15 +18,19 @@ interface NotesListProps {
 export function NotesList({ notes, owner, workspace }: NotesListProps) {
   if (notes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-card text-card-foreground border border-border rounded-xl shadow-xs text-center">
-        <FileQuestion size={48} className="text-muted-foreground/40 mb-4" />
-        <h2 className="text-xl font-bold mb-2 text-foreground">
-          Nenhuma nota encontrada
-        </h2>
-        <p className="text-muted-foreground">
-          Este workspace ainda não possui anotações.
-        </p>
-      </div>
+      <Card className="flex flex-col items-center justify-center p-12 text-center">
+        <CardContent className="flex flex-col items-center gap-4 px-0">
+          <FileQuestion size={48} className="text-muted-foreground/40" />
+          <div>
+            <h2 className="text-xl font-bold text-foreground mb-1">
+              Nenhuma nota encontrada
+            </h2>
+            <p className="text-muted-foreground text-sm">
+              Este workspace ainda não possui anotações.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 

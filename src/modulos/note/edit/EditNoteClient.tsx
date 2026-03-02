@@ -33,7 +33,6 @@ export function EditNoteClient({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [conflictData, setConflictData] = useState<{
     localContent: string;
     remoteContent: string;
@@ -98,10 +97,6 @@ export function EditNoteClient({
     window.location.reload();
   }
 
-  function handleCancel() {
-    router.back();
-  }
-
   return (
     <>
       <NoteForm
@@ -109,19 +104,18 @@ export function EditNoteClient({
         initialData={initialData}
         onSubmit={(data) => handleUpdateNote(data)}
         isLoading={isLoading}
-        onCancel={handleCancel}
+        onCancel={() => router.back()}
         error={error}
       />
 
-      {conflictData && (
-        <ConflictModal
-          localContent={conflictData.localContent}
-          remoteContent={conflictData.remoteContent}
-          onResolve={handleResolveConflict}
-          onDiscardLocal={handleDiscardLocal}
-          onCancel={() => setConflictData(null)}
-        />
-      )}
+      <ConflictModal
+        open={!!conflictData}
+        onOpenChange={(open) => !open && setConflictData(null)}
+        localContent={conflictData?.localContent ?? ""}
+        remoteContent={conflictData?.remoteContent ?? ""}
+        onResolve={handleResolveConflict}
+        onDiscardLocal={handleDiscardLocal}
+      />
     </>
   );
 }

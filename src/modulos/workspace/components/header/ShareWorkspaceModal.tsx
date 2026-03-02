@@ -1,9 +1,15 @@
 "use client";
 
-import { Loader2, UserPlus, Users, X } from "lucide-react";
+import { Loader2, UserPlus, Users } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { Collaborator } from "@/modulos/collaborator/actions/fetchCollaborators";
 import { fetchCollaborators } from "@/modulos/collaborator/actions/fetchCollaborators";
@@ -12,37 +18,40 @@ import { inviteCollaborator } from "@/modulos/collaborator/actions/inviteCollabo
 interface ShareWorkspaceModalProps {
   owner: string;
   workspace: string;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function ShareWorkspaceModal({
   owner,
   workspace,
-  onClose,
+  open,
+  onOpenChange,
 }: ShareWorkspaceModalProps) {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [username, setUsername] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      const result = await fetchCollaborators(owner, workspace);
+    if (!open) return;
 
+    async function load() {
+      setIsLoading(true);
+      const result = await fetchCollaborators(owner, workspace);
       if (result.success) {
         setCollaborators(result.data);
       } else {
         setFetchError(result.error);
       }
-
       setIsLoading(false);
     }
 
     load();
-  }, [owner, workspace]);
+  }, [open, owner, workspace]);
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -65,24 +74,16 @@ export function ShareWorkspaceModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className="bg-card text-card-foreground rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-border">
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 className="text-base font-semibold flex items-center gap-2">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <Users size={18} className="text-primary" />
             Compartilhar Workspace
-          </h2>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            onClick={onClose}
-          >
-            <X size={16} />
-          </Button>
-        </div>
+          </DialogTitle>
+        </DialogHeader>
 
-        <div className="p-6 flex flex-col gap-6">
+        <div className="flex flex-col gap-6">
           <form onSubmit={handleInvite} className="flex flex-col gap-2">
             <div className="flex gap-2">
               <Input
@@ -114,8 +115,8 @@ export function ShareWorkspaceModal({
             )}
           </form>
 
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-semibold text-foreground">
               Pessoas com acesso
             </h3>
 
@@ -126,7 +127,7 @@ export function ShareWorkspaceModal({
             ) : (
               <ul className="flex flex-col gap-3">
                 {collaborators.map((collab) => (
-                  <CollaboratorCard
+                  <CollaboratorItem
                     key={collab.id}
                     collaborator={collab}
                     owner={owner}
@@ -136,17 +137,18 @@ export function ShareWorkspaceModal({
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-type CollaboratorCardProps = {
+function CollaboratorItem({
+  collaborator,
+  owner,
+}: {
   collaborator: Collaborator;
   owner: string;
-};
-
-function CollaboratorCard({ collaborator, owner }: CollaboratorCardProps) {
+}) {
   return (
     <li className="flex items-center gap-3">
       <Image

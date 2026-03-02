@@ -16,6 +16,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -53,6 +63,7 @@ export function NoteViewerClient({
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isFetchingVersion, setIsFetchingVersion] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [versionError, setVersionError] = useState<string | null>(null);
@@ -108,12 +119,6 @@ export function NoteViewerClient({
   }
 
   async function handleDeleteNote() {
-    const confirmed = window.confirm(
-      `Tem certeza que deseja excluir a nota "${initialTitle}"? Esta ação não pode ser desfeita.`,
-    );
-
-    if (!confirmed) return;
-
     setIsDeleting(true);
     setDeleteError(null);
 
@@ -249,7 +254,7 @@ export function NoteViewerClient({
                     type="button"
                     variant="destructive"
                     size="lg"
-                    onClick={handleDeleteNote}
+                    onClick={() => setDeleteConfirmOpen(true)}
                     disabled={isDeleting}
                     className="w-full"
                   >
@@ -266,6 +271,33 @@ export function NoteViewerClient({
                       {deleteError}
                     </p>
                   )}
+
+                  <AlertDialog
+                    open={deleteConfirmOpen}
+                    onOpenChange={setDeleteConfirmOpen}
+                  >
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir nota?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir{" "}
+                          <strong className="text-foreground">
+                            "{initialTitle}"
+                          </strong>
+                          ? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          variant="destructive"
+                          onClick={handleDeleteNote}
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </>
               ) : (
                 <Button

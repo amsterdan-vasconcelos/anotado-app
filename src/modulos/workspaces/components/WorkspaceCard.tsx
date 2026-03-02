@@ -1,75 +1,58 @@
 import { Folder, User as UserIcon } from "lucide-react";
-import Link from "next/link";
+import { AppCard } from "@/components/app-card";
 import { Badge } from "@/components/ui/badge";
 import type { User, WorkspaceRepo } from "@/types/github";
 
-const makeWorkspacePrettyName = (
-  workspaceName: WorkspaceRepo["name"],
-  workspaceDescription: WorkspaceRepo["description"],
-) => {
-  const workspaceSlug = workspaceName.replace("anotado-", "");
-
-  let displayName = workspaceSlug
+function makeDisplayName(
+  name: WorkspaceRepo["name"],
+  description: WorkspaceRepo["description"],
+): string {
+  const slug = name.replace("anotado-", "");
+  const fromSlug = slug
     .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 
   const prefix = "Workspace gerado pelo app de anotações: ";
+  return description?.startsWith(prefix)
+    ? description.replace(prefix, "")
+    : fromSlug;
+}
 
-  if (!!workspaceDescription && workspaceDescription.startsWith(prefix)) {
-    displayName = workspaceDescription.replace(prefix, "");
-  }
-
-  return displayName;
-};
-
-const makeWorkspacePrettyOwner = (
-  ownerLogin: WorkspaceRepo["owner"]["login"],
-) => {
-  const prettyOwner = ownerLogin
+function makeDisplayOwner(login: string): string {
+  return login
     .split("-")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
-
-  return prettyOwner;
-};
+}
 
 type WorkspaceCardProps = {
   workspace: WorkspaceRepo;
   user: User;
 };
 
-const WorkspaceCard = ({ workspace, user }: WorkspaceCardProps) => {
-  const prettyName = makeWorkspacePrettyName(
-    workspace.name,
-    workspace.description,
-  );
-
-  const prettyOwner = makeWorkspacePrettyOwner(workspace.owner.login);
+export function WorkspaceCard({ workspace, user }: WorkspaceCardProps) {
+  const displayName = makeDisplayName(workspace.name, workspace.description);
+  const displayOwner = makeDisplayOwner(workspace.owner.login);
   const isCollaborator = workspace.owner.login !== user.login;
-  const url = `/workspaces/unit?owner=${workspace.owner.login}&workspace=${workspace.name.replace("anotado-", "")}`;
+  const slug = workspace.name.replace("anotado-", "");
+  const href = `/workspaces/unit?owner=${workspace.owner.login}&workspace=${slug}`;
 
   return (
-    <Link
-      href={url}
-      className="flex flex-col gap-4 bg-card text-card-foreground p-6 border border-border rounded-xl shadow-xs hover:shadow-md transition-shadow group"
-    >
-      <div className="flex items-start justify-between">
-        <div className="bg-secondary text-secondary-foreground p-3 rounded-md group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+    <AppCard variant="workspace" href={href}>
+      <AppCard.Header>
+        <AppCard.Icon>
           <Folder size={24} />
-        </div>
+        </AppCard.Icon>
         {isCollaborator && <Badge variant="secondary">Colaborador</Badge>}
-      </div>
+      </AppCard.Header>
 
-      <div>
-        <h3 className="font-bold text-lg text-foreground mb-1">{prettyName}</h3>
-        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-          <UserIcon size={16} />
-          <span>{prettyOwner}</span>
-        </div>
-      </div>
-    </Link>
+      <AppCard.Body>
+        <AppCard.Title>{displayName}</AppCard.Title>
+        <AppCard.Meta icon={<UserIcon size={16} />}>
+          {displayOwner}
+        </AppCard.Meta>
+      </AppCard.Body>
+    </AppCard>
   );
-};
-
-export { WorkspaceCard };
+}

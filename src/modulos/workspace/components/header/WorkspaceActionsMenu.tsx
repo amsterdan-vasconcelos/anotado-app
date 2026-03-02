@@ -1,9 +1,14 @@
 "use client";
 
 import { ChevronDown, Folder, Trash2, Users } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface WorkspaceActionsMenuProps {
   onShareClick: () => void;
@@ -14,62 +19,27 @@ export function WorkspaceActionsMenu({
   onShareClick,
   onDeleteClick,
 }: WorkspaceActionsMenuProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
-    <div className="relative" ref={menuRef}>
-      <Button
-        type="button"
-        variant="outline"
-        size="lg"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="outline" size="lg" />}>
         <Folder size={16} />
         Workspace
-        <ChevronDown
-          size={14}
-          className={cn("transition-transform", isOpen && "rotate-180")}
-        />
-      </Button>
+        <ChevronDown size={14} />
+      </DropdownMenuTrigger>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-1 w-48 bg-card border border-border rounded-lg shadow-md py-1 z-50">
-          <button
-            type="button"
-            onClick={() => {
-              setIsOpen(false);
-              onShareClick();
-            }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-          >
-            <Users size={16} />
-            Compartilhar
-          </button>
+      <DropdownMenuContent align="end" side="bottom" sideOffset={6}>
+        <DropdownMenuItem onClick={onShareClick}>
+          <Users size={16} />
+          Compartilhar
+        </DropdownMenuItem>
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsOpen(false);
-              onDeleteClick();
-            }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-          >
-            <Trash2 size={16} />
-            Deletar Workspace
-          </button>
-        </div>
-      )}
-    </div>
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem variant="destructive" onClick={onDeleteClick}>
+          <Trash2 size={16} />
+          Deletar Workspace
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
