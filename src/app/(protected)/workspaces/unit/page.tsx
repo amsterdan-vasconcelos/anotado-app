@@ -3,8 +3,8 @@ import { getFileContent, getRepo } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 import { formatDisplayName } from "@/lib/string-util";
-import { WorkspaceHeader } from "@/modulos/workspace/components/header";
-import { WorkspaceNotesViewer } from "@/modulos/workspace/components/notes-list";
+import { WorkspaceHeader } from "@/modules/workspace/components/header";
+import { WorkspaceNotesViewer } from "@/modules/workspace/components/notes-list";
 
 interface WorkspacePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

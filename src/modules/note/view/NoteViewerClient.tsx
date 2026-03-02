@@ -32,12 +32,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { deleteNote } from "@/modulos/note/actions/deleteNote";
+import { deleteNote } from "@/modules/note/actions/deleteNote";
 import {
   type CommitRecord,
   fetchHistory,
-} from "@/modulos/note/actions/fetchHistory";
-import { fetchVersion } from "@/modulos/note/actions/fetchVersion";
+} from "@/modules/note/actions/fetchHistory";
+import { fetchVersion } from "@/modules/note/actions/fetchVersion";
 import { MarkdownViewer } from "./MarkdownViewer";
 
 interface NoteViewerClientProps {

@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createWorkspace } from "@/modulos/workspace/actions/createWorkspace";
+import { createWorkspace } from "@/modules/workspace/actions/createWorkspace";
 
 export function CreateWorkspaceClient() {
   const router = useRouter();
@@ -30,7 +30,7 @@ export function CreateWorkspaceClient() {
     }
 
     router.push(
-      `/workspace/unit?owner=${result.data.owner}&workspace=${result.data.slug}`,
+      `/workspaces/unit?owner=${result.data.owner}&workspace=${result.data.slug}`,
     );
     router.refresh();
   }

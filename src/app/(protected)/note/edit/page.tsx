@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getFileContent } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
-import { EditNoteClient } from "@/modulos/note/edit/EditNoteClient";
+import { EditNoteClient } from "@/modules/note/edit/components/EditNoteClient";
 
 interface EditNotePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

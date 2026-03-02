@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { FooterRoot } from "@/modulos/root/components/Footer";
-import { HeaderRoot } from "@/modulos/root/components/Header";
+import { FooterRoot } from "@/modules/root/components/Footer";
+import { HeaderRoot } from "@/modules/root/components/Header";
 
 export const metadata: Metadata = {
   title: "Ônix — sabor obsidian",

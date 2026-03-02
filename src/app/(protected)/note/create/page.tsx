@@ -1,7 +1,7 @@
 import { getFileContent } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
-import { CreateNoteClient } from "@/modulos/note/create/components/CreateNoteClient";
+import { CreateNoteClient } from "@/modules/note/create/components/CreateNoteClient";
 
 interface CreateNotePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

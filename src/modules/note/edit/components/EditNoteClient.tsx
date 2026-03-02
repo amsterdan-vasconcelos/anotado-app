@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type { UpdateNoteResult } from "@/modulos/note/actions/updateNote";
-import { updateNote } from "@/modulos/note/actions/updateNote";
-import { NoteForm } from "../create/components/NoteForm";
-import { ConflictModal } from "./ConflitModal";
+import type { UpdateNoteResult } from "@/modules/note/actions/updateNote";
+import { updateNote } from "@/modules/note/actions/updateNote";
+import { NoteForm } from "../../create/components/NoteForm";
+import { ConflictModal } from "./ConflictModal";
 
 interface EditNoteClientProps {
   owner: string;

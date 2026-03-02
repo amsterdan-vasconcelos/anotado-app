@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createNote } from "@/modulos/note/actions/createNote";
+import { createNote } from "@/modules/note/actions/createNote";
 import { NoteForm } from "./NoteForm";
 
 interface CreateNoteClientProps {

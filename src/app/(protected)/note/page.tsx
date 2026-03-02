@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getFileContent } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
-import { NoteViewerClient } from "@/modulos/note/NoteViewerClient";
+import { NoteViewerClient } from "@/modules/note/view/NoteViewerClient";
 
 interface ViewNotePageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

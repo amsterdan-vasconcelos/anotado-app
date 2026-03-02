@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { SlashCommandItem, SlashMenuState } from "../util/command";
+import type { SlashCommandItem, SlashMenuState } from "../utils/command";
 
 interface SlashCommandMenuProps {
   state: SlashMenuState;

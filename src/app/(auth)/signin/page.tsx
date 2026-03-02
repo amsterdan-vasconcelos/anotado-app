@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
-import { SignInButton } from "@/modulos/auth/components/SignInButton";
+import { SignInButton } from "@/modules/auth/components/SignInButton";
 import type { CustomSession } from "@/types/auth";
 
 export default async function LoginPage() {

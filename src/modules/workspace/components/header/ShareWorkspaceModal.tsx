@@ -11,9 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import type { Collaborator } from "@/modulos/collaborator/actions/fetchCollaborators";
-import { fetchCollaborators } from "@/modulos/collaborator/actions/fetchCollaborators";
-import { inviteCollaborator } from "@/modulos/collaborator/actions/inviteCollaborator";
+import type { Collaborator } from "@/modules/collaborator/actions/fetchCollaborators";
+import { fetchCollaborators } from "@/modules/collaborator/actions/fetchCollaborators";
+import { inviteCollaborator } from "@/modules/collaborator/actions/inviteCollaborator";
 
 interface ShareWorkspaceModalProps {
   owner: string;

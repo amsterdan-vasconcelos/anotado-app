@@ -23,7 +23,7 @@ import {
   defaultSlashMenuState,
   type SlashCommandItem,
   type SlashMenuState,
-} from "../util/command";
+} from "../utils/command";
 import { CodeBlockComponent } from "./CodeBlockComponent";
 import { SlashCommandMenu } from "./SlashCommandMenu";
 

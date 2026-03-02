@@ -14,7 +14,7 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { deleteWorkspace } from "@/modulos/workspace/actions/deleteWorkspace";
+import { deleteWorkspace } from "@/modules/workspace/actions/deleteWorkspace";
 
 interface DeleteWorkspaceModalProps {
   owner: string;

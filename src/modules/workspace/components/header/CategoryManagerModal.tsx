@@ -30,10 +30,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { createCategory } from "@/modulos/category/actions/createCategory";
-import { deleteCategory } from "@/modulos/category/actions/deleteCategory";
-import { fetchCategories } from "@/modulos/category/actions/fetchCategories";
-import { renameCategory } from "@/modulos/category/actions/renameCategory";
+import { createCategory } from "@/modules/category/actions/createCategory";
+import { deleteCategory } from "@/modules/category/actions/deleteCategory";
+import { fetchCategories } from "@/modules/category/actions/fetchCategories";
+import { renameCategory } from "@/modules/category/actions/renameCategory";
 
 interface CategoryManagerModalProps {
   owner: string;

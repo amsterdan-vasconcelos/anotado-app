@@ -1,5 +1,5 @@
 import { getRequiredSession } from "@/lib/session";
-import { CreateWorkspaceClient } from "../../../../modulos/workspace/create/components/workspace-create-client";
+import { CreateWorkspaceClient } from "@/modules/workspace/create/components/CreateWorkspaceClient";
 
 const WorkspaceCreatePage = async () => {
   await getRequiredSession();

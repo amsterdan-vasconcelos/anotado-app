@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { TipTapEditor } from "@/modulos/editor/components/TiptapEditor";
+import { TipTapEditor } from "@/modules/editor/components/TipTapEditor";
 import { CategorySelector } from "./CategorySelector";
 
 // ─── Mode configuration ──────────────────────────────────────────────────────

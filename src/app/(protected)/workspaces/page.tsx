@@ -2,12 +2,12 @@ import { Settings } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { github } from "@/lib/github";
-import { WorkspaceEmptyState } from "@/modulos/workspaces/components/WorkspaceEmptyState";
-import { WorkspaceGrid } from "@/modulos/workspaces/components/WorkspaceGrid";
-import { HomeHeader } from "@/modulos/workspaces/components/WorkspaceHeader";
+import { HomeHeader } from "@/modules/workspace/list/HomeHeader";
+import { WorkspaceEmptyState } from "@/modules/workspace/list/WorkspaceEmptyState";
+import { WorkspaceGrid } from "@/modules/workspace/list/WorkspaceGrid";
 import type { CustomSession } from "@/types/auth";
 
-const HomePage = async () => {
+const WorkspacesPage = async () => {
   const session = (await auth()) as CustomSession;
 
   if (!session?.accessToken) redirect("/signin");
@@ -66,4 +66,4 @@ const HomePage = async () => {
   );
 };
 
-export default HomePage;
+export default WorkspacesPage;
