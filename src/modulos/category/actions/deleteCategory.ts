@@ -1,17 +1,21 @@
-import { NextResponse } from "next/server";
-import { getOctokit } from "@/lib/octokit";
-import { getSessionForApi } from "@/lib/session";
+"use server";
 
-const deleteCategory = async (request: Request) => {
-  const { session, unauthorized } = await getSessionForApi();
-  if (unauthorized) return unauthorized;
+import type { ActionResult } from "@/lib/action-result";
+import { getOctokit } from "@/lib/octokit";
+import { getRequiredSession } from "@/lib/session";
+
+export async function deleteCategory(
+  owner: string,
+  workspace: string,
+  category: string,
+): Promise<ActionResult> {
+  const session = await getRequiredSession();
 
   try {
-    const { owner, workspace, category } = await request.json();
     const octokit = getOctokit(session.accessToken || "");
     const repo = `anotado-${workspace}`;
 
-    // 1. Remover categoria do workspace-index.json
+    // 1. Atualizar workspace-index.json removendo a categoria e suas notas
     try {
       const { data: indexFile } = await octokit.rest.repos.getContent({
         owner,
@@ -24,10 +28,10 @@ const deleteCategory = async (request: Request) => {
         indexFile.type === "file" &&
         indexFile.content
       ) {
-        const decodedIndex = Buffer.from(indexFile.content, "base64").toString(
+        const decoded = Buffer.from(indexFile.content, "base64").toString(
           "utf-8",
         );
-        const indexData = JSON.parse(decodedIndex);
+        const indexData = JSON.parse(decoded);
 
         if (indexData.categories) {
           indexData.categories = indexData.categories.filter(
@@ -37,7 +41,7 @@ const deleteCategory = async (request: Request) => {
 
         if (indexData.notes) {
           indexData.notes = indexData.notes.filter(
-            (n: any) => n.category !== category,
+            (n: { category: string }) => n.category !== category,
           );
         }
 
@@ -52,11 +56,11 @@ const deleteCategory = async (request: Request) => {
           sha: indexFile.sha,
         });
       }
-    } catch (e) {
-      console.error("[DELETE /api/categories] Erro ao atualizar index:", e);
+    } catch (err) {
+      console.error("[deleteCategory] Erro ao atualizar index:", err);
     }
 
-    // 2. Deletar todos os arquivos da categoria
+    // 2. Deletar todos os arquivos .md da pasta da categoria
     try {
       const { data: files } = await octokit.rest.repos.getContent({
         owner,
@@ -77,18 +81,14 @@ const deleteCategory = async (request: Request) => {
           }
         }
       }
-    } catch (e: any) {
-      if (e.status !== 404) throw e;
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status;
+      if (status !== 404) throw err;
     }
 
-    return NextResponse.json({ success: true });
+    return { success: true, data: undefined };
   } catch (error) {
-    console.error("[DELETE /api/categories]", error);
-    return NextResponse.json(
-      { error: "Erro ao excluir categoria" },
-      { status: 500 },
-    );
+    console.error("[deleteCategory action]", error);
+    return { success: false, error: "Erro ao excluir categoria." };
   }
-};
-
-export { deleteCategory };
+}

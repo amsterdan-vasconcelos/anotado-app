@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  apiAddCategory,
-  apiDeleteCategory,
-  apiFetchCategories,
-  apiRenameCategory,
-} from "@/lib/api-client";
+import { createCategory } from "@/modulos/category/actions/createCategory";
+import { deleteCategory } from "@/modulos/category/actions/deleteCategory";
+import { fetchCategories } from "@/modulos/category/actions/fetchCategories";
+import { renameCategory } from "@/modulos/category/actions/renameCategory";
 
 interface CategoryManagerModalProps {
   owner: string;
@@ -31,26 +29,21 @@ export function CategoryManagerModal({
   const [editValue, setEditValue] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-
-  // Estado para nova categoria
   const [newCategoryValue, setNewCategoryValue] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchCategories() {
-      const result = await apiFetchCategories(owner, workspace);
-
+    async function loadCategories() {
+      const result = await fetchCategories(owner, workspace);
       if (result.success) {
         setCategories(result.data);
       } else {
         setFetchError(result.error);
       }
-
       setIsLoading(false);
     }
-
-    fetchCategories();
+    loadCategories();
   }, [owner, workspace]);
 
   function startEditing(category: string) {
@@ -74,7 +67,7 @@ export function CategoryManagerModal({
     setIsProcessing(true);
     setActionError(null);
 
-    const result = await apiRenameCategory({
+    const result = await renameCategory({
       owner,
       workspace,
       oldCategory,
@@ -98,13 +91,12 @@ export function CategoryManagerModal({
     const confirmed = window.confirm(
       `Tem certeza que deseja excluir a categoria "${category}"? TODAS as notas dentro dela serão apagadas. Esta ação não tem volta.`,
     );
-
     if (!confirmed) return;
 
     setIsProcessing(true);
     setActionError(null);
 
-    const result = await apiDeleteCategory(owner, workspace, category);
+    const result = await deleteCategory(owner, workspace, category);
 
     if (result.success) {
       setCategories((prev) => prev.filter((c) => c !== category));
@@ -132,7 +124,7 @@ export function CategoryManagerModal({
     setIsAdding(true);
     setAddError(null);
 
-    const result = await apiAddCategory(owner, workspace, slug);
+    const result = await createCategory(owner, workspace, slug);
 
     if (result.success) {
       setCategories((prev) => [...prev, slug]);

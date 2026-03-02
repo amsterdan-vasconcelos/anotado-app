@@ -1,16 +1,26 @@
-import { NextResponse } from "next/server";
-import { getOctokit } from "@/lib/octokit";
-import { getSessionForApi } from "@/lib/session";
+"use server";
 
-const updateCategory = async (request: Request) => {
-  const { session, unauthorized } = await getSessionForApi();
-  if (unauthorized) return unauthorized;
+import type { ActionResult } from "@/lib/action-result";
+import { getOctokit } from "@/lib/octokit";
+import { getRequiredSession } from "@/lib/session";
+
+export interface RenameCategoryInput {
+  owner: string;
+  workspace: string;
+  oldCategory: string;
+  newCategory: string;
+}
+
+export async function renameCategory(
+  input: RenameCategoryInput,
+): Promise<ActionResult> {
+  const session = await getRequiredSession();
+
+  const { owner, workspace, oldCategory, newCategory } = input;
+  const octokit = getOctokit(session.accessToken || "");
+  const repo = `anotado-${workspace}`;
 
   try {
-    const { owner, workspace, oldCategory, newCategory } = await request.json();
-    const octokit = getOctokit(session.accessToken || "");
-    const repo = `anotado-${workspace}`;
-
     // 1. Atualizar workspace-index.json
     try {
       const { data: indexFile } = await octokit.rest.repos.getContent({
@@ -24,10 +34,10 @@ const updateCategory = async (request: Request) => {
         indexFile.type === "file" &&
         indexFile.content
       ) {
-        const decodedIndex = Buffer.from(indexFile.content, "base64").toString(
+        const decoded = Buffer.from(indexFile.content, "base64").toString(
           "utf-8",
         );
-        const indexData = JSON.parse(decodedIndex);
+        const indexData = JSON.parse(decoded);
 
         if (indexData.categories) {
           indexData.categories = indexData.categories.map((c: string) =>
@@ -53,7 +63,7 @@ const updateCategory = async (request: Request) => {
         });
       }
     } catch (e) {
-      console.error("[PUT /api/categories] Erro ao atualizar index:", e);
+      console.error("[renameCategory] Erro ao atualizar index:", e);
     }
 
     // 2. Mover arquivos .md para a nova pasta
@@ -83,21 +93,19 @@ const updateCategory = async (request: Request) => {
                 "base64",
               ).toString("utf-8");
 
-              const updatedContentStr = contentStr.replace(
+              const updatedContent = contentStr.replace(
                 new RegExp(`category:\\s*"${oldCategory}"`),
                 `category: "${newCategory}"`,
               );
 
-              // Cria no novo caminho
               await octokit.rest.repos.createOrUpdateFileContents({
                 owner,
                 repo,
                 path: `${newCategory}/${file.name}`,
                 message: `refactor: mover nota para categoria ${newCategory}`,
-                content: Buffer.from(updatedContentStr).toString("base64"),
+                content: Buffer.from(updatedContent).toString("base64"),
               });
 
-              // Remove do caminho antigo
               await octokit.rest.repos.deleteFile({
                 owner,
                 repo,
@@ -110,18 +118,12 @@ const updateCategory = async (request: Request) => {
         }
       }
     } catch (e: any) {
-      // 404 significa que a categoria estava vazia — não há arquivos para mover
       if (e.status !== 404) throw e;
     }
 
-    return NextResponse.json({ success: true });
+    return { success: true, data: undefined };
   } catch (error) {
-    console.error("[PUT /api/categories]", error);
-    return NextResponse.json(
-      { error: "Erro ao renomear categoria" },
-      { status: 500 },
-    );
+    console.error("[renameCategory action]", error);
+    return { success: false, error: "Erro ao renomear categoria." };
   }
-};
-
-export { updateCategory };
+}

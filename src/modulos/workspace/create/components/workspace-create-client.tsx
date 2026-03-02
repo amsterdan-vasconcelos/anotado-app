@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { apiCreateWorkspace } from "@/lib/api-client";
+import { createWorkspace } from "@/modulos/workspace/actions/createWorkspace";
 
 export function CreateWorkspaceClient() {
   const router = useRouter();
@@ -14,14 +14,14 @@ export function CreateWorkspaceClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.SubmitEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
 
     setIsLoading(true);
     setError(null);
 
-    const result = await apiCreateWorkspace(name);
+    const result = await createWorkspace(name);
 
     if (!result.success) {
       setError(result.error);
@@ -59,7 +59,7 @@ export function CreateWorkspaceClient() {
       </div>
 
       <div className="flex items-center gap-3 pt-2">
-        <Button variant={"outline"} size={"lg"} onClick={() => router.back()}>
+        <Button variant="outline" size="lg" onClick={() => router.back()}>
           <ArrowLeft size={16} />
           Cancelar
         </Button>

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { apiCreateNote } from "@/lib/api-client";
+import { createNote } from "@/modulos/note/actions/createNote";
 import { NoteForm } from "./NoteForm";
 
 interface CreateNoteClientProps {
@@ -28,7 +28,7 @@ export function CreateNoteClient({
     setIsLoading(true);
     setError(null);
 
-    const result = await apiCreateNote({ owner, workspace, ...data });
+    const result = await createNote({ owner, workspace, ...data });
 
     if (!result.success) {
       setError(result.error);

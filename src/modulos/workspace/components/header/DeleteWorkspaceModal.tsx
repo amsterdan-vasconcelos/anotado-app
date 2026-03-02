@@ -4,7 +4,7 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { apiDeleteWorkspace } from "@/lib/api-client";
+import { deleteWorkspace } from "@/modulos/workspace/actions/deleteWorkspace";
 
 interface DeleteWorkspaceModalProps {
   owner: string;
@@ -25,7 +25,7 @@ export function DeleteWorkspaceModal({
     setIsDeleting(true);
     setError(null);
 
-    const result = await apiDeleteWorkspace(owner, workspace);
+    const result = await deleteWorkspace(owner, workspace);
 
     if (!result.success) {
       setError(result.error);

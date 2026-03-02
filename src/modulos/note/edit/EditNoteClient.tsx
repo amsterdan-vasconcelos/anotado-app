@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { apiUpdateNote } from "@/lib/api-client";
+import type { UpdateNoteResult } from "@/modulos/note/actions/updateNote";
+import { updateNote } from "@/modulos/note/actions/updateNote";
 import { NoteForm } from "../create/components/NoteForm";
 import { ConflictModal } from "./ConflitModal";
 
@@ -48,7 +49,7 @@ export function EditNoteClient({
     setIsLoading(true);
     setError(null);
 
-    const result = await apiUpdateNote({
+    const result: UpdateNoteResult = await updateNote({
       owner,
       workspace,
       oldCategory,
@@ -106,7 +107,7 @@ export function EditNoteClient({
       <NoteForm
         categories={categories}
         initialData={initialData}
-        onSubmit={(data: any) => handleUpdateNote(data)}
+        onSubmit={(data) => handleUpdateNote(data)}
         isLoading={isLoading}
         onCancel={handleCancel}
         error={error}

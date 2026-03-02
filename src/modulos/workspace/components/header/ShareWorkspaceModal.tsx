@@ -5,8 +5,9 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { Collaborator } from "@/lib/api-client";
-import { apiFetchCollaborators, apiInviteCollaborator } from "@/lib/api-client";
+import type { Collaborator } from "@/modulos/collaborator/actions/fetchCollaborators";
+import { fetchCollaborators } from "@/modulos/collaborator/actions/fetchCollaborators";
+import { inviteCollaborator } from "@/modulos/collaborator/actions/inviteCollaborator";
 
 interface ShareWorkspaceModalProps {
   owner: string;
@@ -28,8 +29,8 @@ export function ShareWorkspaceModal({
   const [inviteSuccess, setInviteSuccess] = useState(false);
 
   useEffect(() => {
-    async function fetchCollaborators() {
-      const result = await apiFetchCollaborators(owner, workspace);
+    async function load() {
+      const result = await fetchCollaborators(owner, workspace);
 
       if (result.success) {
         setCollaborators(result.data);
@@ -40,7 +41,7 @@ export function ShareWorkspaceModal({
       setIsLoading(false);
     }
 
-    fetchCollaborators();
+    load();
   }, [owner, workspace]);
 
   async function handleInvite(e: React.FormEvent) {
@@ -51,7 +52,7 @@ export function ShareWorkspaceModal({
     setInviteError(null);
     setInviteSuccess(false);
 
-    const result = await apiInviteCollaborator(owner, workspace, username);
+    const result = await inviteCollaborator(owner, workspace, username);
 
     if (result.success) {
       setUsername("");
@@ -145,9 +146,7 @@ type CollaboratorCardProps = {
   owner: string;
 };
 
-const CollaboratorCard = ({ collaborator, owner }: CollaboratorCardProps) => {
-  console.log(collaborator.avatar_url);
-
+function CollaboratorCard({ collaborator, owner }: CollaboratorCardProps) {
   return (
     <li className="flex items-center gap-3">
       <Image
@@ -167,4 +166,4 @@ const CollaboratorCard = ({ collaborator, owner }: CollaboratorCardProps) => {
       )}
     </li>
   );
-};
+}

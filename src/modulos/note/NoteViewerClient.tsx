@@ -19,13 +19,13 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import type { CommitRecord } from "@/lib/api-client";
-import {
-  apiDeleteNote,
-  apiFetchHistory,
-  apiFetchVersion,
-} from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { deleteNote } from "@/modulos/note/actions/deleteNote";
+import {
+  type CommitRecord,
+  fetchHistory,
+} from "@/modulos/note/actions/fetchHistory";
+import { fetchVersion } from "@/modulos/note/actions/fetchVersion";
 import { MarkdownViewer } from "./MarkdownViewer";
 
 interface NoteViewerClientProps {
@@ -61,7 +61,7 @@ export function NoteViewerClient({
 
   useEffect(() => {
     async function loadHistory() {
-      const result = await apiFetchHistory(owner, workspace, path);
+      const result = await fetchHistory(owner, workspace, path);
 
       if (result.success) {
         setCommits(result.data);
@@ -91,7 +91,7 @@ export function NoteViewerClient({
 
     setIsFetchingVersion(true);
 
-    const result = await apiFetchVersion(owner, workspace, path, sha);
+    const result = await fetchVersion(owner, workspace, path, sha);
 
     if (result.success) {
       const contentSplit = result.data.content.split("---");
@@ -117,7 +117,7 @@ export function NoteViewerClient({
     setIsDeleting(true);
     setDeleteError(null);
 
-    const result = await apiDeleteNote({ owner, workspace, category, slug });
+    const result = await deleteNote({ owner, workspace, category, slug });
 
     if (!result.success) {
       setDeleteError(result.error);
@@ -148,7 +148,6 @@ export function NoteViewerClient({
       {/* Coluna central — papel de leitura */}
       <main className="flex-1 overflow-y-auto bg-muted/30 flex justify-center py-12 px-6">
         <div className="w-full max-w-3xl flex flex-col gap-4">
-          {/* Banner: visualizando versão antiga */}
           {isViewingOldVersion && (
             <div className="flex items-start gap-3 bg-secondary border border-border p-4 rounded-xl">
               <AlertCircle size={18} className="text-primary mt-0.5 shrink-0" />
@@ -165,7 +164,6 @@ export function NoteViewerClient({
             </div>
           )}
 
-          {/* Banner: erro ao carregar versão */}
           {versionError && (
             <div className="flex items-start gap-3 bg-destructive/10 border border-destructive/20 p-4 rounded-xl">
               <AlertCircle
@@ -176,7 +174,6 @@ export function NoteViewerClient({
             </div>
           )}
 
-          {/* Papel */}
           <div
             className={cn(
               "bg-card rounded-2xl shadow-md ring-1 ring-border/60 min-h-full px-10 py-10 transition-opacity",
@@ -196,7 +193,6 @@ export function NoteViewerClient({
           sidebarOpen ? "w-72" : "w-14",
         )}
       >
-        {/* Botão de toggle — sempre visível no topo */}
         <div
           className={cn(
             "pt-6 shrink-0 flex",
@@ -217,16 +213,13 @@ export function NoteViewerClient({
           </button>
         </div>
 
-        {/* Conteúdo — fade in/out com a abertura */}
         <div
           className={cn(
             "flex flex-col min-h-0 flex-1 transition-opacity duration-150",
             sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none",
           )}
         >
-          {/* Seção estática: metadados + ações */}
           <div className="px-6 pt-5 pb-6 flex flex-col gap-6 shrink-0">
-            {/* Metadados */}
             <div>
               <h2 className="text-base font-semibold text-foreground leading-snug">
                 {initialTitle}
@@ -238,7 +231,6 @@ export function NoteViewerClient({
 
             <Separator />
 
-            {/* Ações */}
             <div className="flex flex-col gap-2">
               {!isViewingOldVersion ? (
                 <>
@@ -291,7 +283,6 @@ export function NoteViewerClient({
 
             <Separator />
 
-            {/* Cabeçalho do histórico */}
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <Clock size={14} className="text-primary" />
               Histórico de Versões
