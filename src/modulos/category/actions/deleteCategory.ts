@@ -1,6 +1,12 @@
 "use server";
 
 import type { ActionResult } from "@/lib/action-result";
+import {
+  deleteFile,
+  getDirectoryContent,
+  getFileContent,
+  upsertFile,
+} from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 
@@ -17,21 +23,14 @@ export async function deleteCategory(
 
     // 1. Atualizar workspace-index.json removendo a categoria e suas notas
     try {
-      const { data: indexFile } = await octokit.rest.repos.getContent({
+      const indexFile = await getFileContent(octokit, {
         owner,
         repo,
         path: "workspace-index.json",
       });
 
-      if (
-        !Array.isArray(indexFile) &&
-        indexFile.type === "file" &&
-        indexFile.content
-      ) {
-        const decoded = Buffer.from(indexFile.content, "base64").toString(
-          "utf-8",
-        );
-        const indexData = JSON.parse(decoded);
+      if (indexFile) {
+        const indexData = JSON.parse(indexFile.content);
 
         if (indexData.categories) {
           indexData.categories = indexData.categories.filter(
@@ -45,14 +44,12 @@ export async function deleteCategory(
           );
         }
 
-        await octokit.rest.repos.createOrUpdateFileContents({
+        await upsertFile(octokit, {
           owner,
           repo,
           path: "workspace-index.json",
           message: `chore: remover categoria ${category}`,
-          content: Buffer.from(JSON.stringify(indexData, null, 2)).toString(
-            "base64",
-          ),
+          content: JSON.stringify(indexData, null, 2),
           sha: indexFile.sha,
         });
       }
@@ -61,29 +58,24 @@ export async function deleteCategory(
     }
 
     // 2. Deletar todos os arquivos .md da pasta da categoria
-    try {
-      const { data: files } = await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path: category,
-      });
+    const files = await getDirectoryContent(octokit, {
+      owner,
+      repo,
+      path: category,
+    });
 
-      if (Array.isArray(files)) {
-        for (const file of files) {
-          if (file.type === "file") {
-            await octokit.rest.repos.deleteFile({
-              owner,
-              repo,
-              path: file.path,
-              message: `chore: excluir nota junto com a categoria ${category}`,
-              sha: file.sha,
-            });
-          }
+    if (files) {
+      for (const file of files) {
+        if (file.type === "file") {
+          await deleteFile(octokit, {
+            owner,
+            repo,
+            path: file.path,
+            message: `chore: excluir nota junto com a categoria ${category}`,
+            sha: file.sha,
+          });
         }
       }
-    } catch (err: unknown) {
-      const status = (err as { status?: number }).status;
-      if (status !== 404) throw err;
     }
 
     return { success: true, data: undefined };

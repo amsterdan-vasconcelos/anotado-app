@@ -1,6 +1,12 @@
 "use server";
 
 import type { ActionResult } from "@/lib/action-result";
+import {
+  deleteFile,
+  getDirectoryContent,
+  getFileContent,
+  upsertFile,
+} from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 
@@ -23,21 +29,14 @@ export async function renameCategory(
   try {
     // 1. Atualizar workspace-index.json
     try {
-      const { data: indexFile } = await octokit.rest.repos.getContent({
+      const indexFile = await getFileContent(octokit, {
         owner,
         repo,
         path: "workspace-index.json",
       });
 
-      if (
-        !Array.isArray(indexFile) &&
-        indexFile.type === "file" &&
-        indexFile.content
-      ) {
-        const decoded = Buffer.from(indexFile.content, "base64").toString(
-          "utf-8",
-        );
-        const indexData = JSON.parse(decoded);
+      if (indexFile) {
+        const indexData = JSON.parse(indexFile.content);
 
         if (indexData.categories) {
           indexData.categories = indexData.categories.map((c: string) =>
@@ -51,14 +50,12 @@ export async function renameCategory(
           );
         }
 
-        await octokit.rest.repos.createOrUpdateFileContents({
+        await upsertFile(octokit, {
           owner,
           repo,
           path: "workspace-index.json",
           message: `refactor: renomear categoria ${oldCategory} → ${newCategory}`,
-          content: Buffer.from(JSON.stringify(indexData, null, 2)).toString(
-            "base64",
-          ),
+          content: JSON.stringify(indexData, null, 2),
           sha: indexFile.sha,
         });
       }
@@ -67,58 +64,45 @@ export async function renameCategory(
     }
 
     // 2. Mover arquivos .md para a nova pasta
-    try {
-      const { data: files } = await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path: oldCategory,
-      });
+    const files = await getDirectoryContent(octokit, {
+      owner,
+      repo,
+      path: oldCategory,
+    });
 
-      if (Array.isArray(files)) {
-        for (const file of files) {
-          if (file.type === "file" && file.name.endsWith(".md")) {
-            const { data: fileData } = await octokit.rest.repos.getContent({
+    if (files) {
+      for (const file of files) {
+        if (file.type === "file" && file.name.endsWith(".md")) {
+          const fileData = await getFileContent(octokit, {
+            owner,
+            repo,
+            path: file.path,
+          });
+
+          if (fileData) {
+            const updatedContent = fileData.content.replace(
+              new RegExp(`category:\\s*"${oldCategory}"`),
+              `category: "${newCategory}"`,
+            );
+
+            await upsertFile(octokit, {
+              owner,
+              repo,
+              path: `${newCategory}/${file.name}`,
+              message: `refactor: mover nota para categoria ${newCategory}`,
+              content: updatedContent,
+            });
+
+            await deleteFile(octokit, {
               owner,
               repo,
               path: file.path,
+              message: `chore: remover nota da categoria antiga ${oldCategory}`,
+              sha: file.sha,
             });
-
-            if (
-              !Array.isArray(fileData) &&
-              fileData.type === "file" &&
-              fileData.content
-            ) {
-              const contentStr = Buffer.from(
-                fileData.content,
-                "base64",
-              ).toString("utf-8");
-
-              const updatedContent = contentStr.replace(
-                new RegExp(`category:\\s*"${oldCategory}"`),
-                `category: "${newCategory}"`,
-              );
-
-              await octokit.rest.repos.createOrUpdateFileContents({
-                owner,
-                repo,
-                path: `${newCategory}/${file.name}`,
-                message: `refactor: mover nota para categoria ${newCategory}`,
-                content: Buffer.from(updatedContent).toString("base64"),
-              });
-
-              await octokit.rest.repos.deleteFile({
-                owner,
-                repo,
-                path: file.path,
-                message: `chore: remover nota da categoria antiga ${oldCategory}`,
-                sha: file.sha,
-              });
-            }
           }
         }
       }
-    } catch (e: any) {
-      if (e.status !== 404) throw e;
     }
 
     return { success: true, data: undefined };

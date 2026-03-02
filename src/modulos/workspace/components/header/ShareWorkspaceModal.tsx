@@ -152,7 +152,7 @@ function CollaboratorItem({
   return (
     <li className="flex items-center gap-3">
       <Image
-        src={collaborator.avatar_url}
+        src={collaborator.avatarUrl}
         alt={collaborator.login}
         width={32}
         height={32}

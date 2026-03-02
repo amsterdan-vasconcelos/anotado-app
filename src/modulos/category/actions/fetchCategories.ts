@@ -1,6 +1,7 @@
 "use server";
 
 import type { ActionResult } from "@/lib/action-result";
+import { getFileContent } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 
@@ -14,25 +15,18 @@ export async function fetchCategories(
     const octokit = getOctokit(session.accessToken || "");
     const repo = `anotado-${workspace}`;
 
-    const { data: indexFile } = await octokit.rest.repos.getContent({
+    const indexFile = await getFileContent(octokit, {
       owner,
       repo,
       path: "workspace-index.json",
     });
 
-    if (
-      !Array.isArray(indexFile) &&
-      indexFile.type === "file" &&
-      indexFile.content
-    ) {
-      const decoded = Buffer.from(indexFile.content, "base64").toString(
-        "utf-8",
-      );
-      const indexData = JSON.parse(decoded);
-      return { success: true, data: indexData.categories ?? ["geral"] };
+    if (!indexFile) {
+      return { success: true, data: ["geral"] };
     }
 
-    return { success: true, data: ["geral"] };
+    const indexData = JSON.parse(indexFile.content);
+    return { success: true, data: indexData.categories ?? ["geral"] };
   } catch (error) {
     console.error("[fetchCategories]", error);
     return { success: false, error: "Erro ao buscar categorias." };

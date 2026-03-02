@@ -1,6 +1,7 @@
 "use server";
 
 import type { ActionResult } from "@/lib/action-result";
+import { addCollaborator } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 
@@ -15,12 +16,7 @@ export async function inviteCollaborator(
     const octokit = getOctokit(session.accessToken || "");
     const repo = `anotado-${workspace}`;
 
-    await octokit.rest.repos.addCollaborator({
-      owner,
-      repo,
-      username,
-      permission: "push",
-    });
+    await addCollaborator(octokit, { owner, repo, username });
 
     return { success: true, data: undefined };
   } catch (error) {

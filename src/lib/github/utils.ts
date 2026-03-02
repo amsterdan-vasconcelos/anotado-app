@@ -1,45 +1,34 @@
 import { redirect } from "next/navigation";
 import { RequestError } from "octokit";
 import { getOctokit } from "../octokit";
+import { getFileContent, listUserRepos } from "./api/repos";
+import { getAuthenticatedUser, listUserInstallations } from "./api/users";
 
 const checkHasWorkspaceIndex = async (
   octokit: ReturnType<typeof getOctokit>,
   owner: string,
   repo: string,
-) => {
-  try {
-    await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: "workspace-index.json",
-    });
-    return true;
-  } catch (error: unknown) {
-    if (error instanceof RequestError && error.status === 404) {
-      return false;
-    }
-    throw error;
-  }
+): Promise<boolean> => {
+  const file = await getFileContent(octokit, {
+    owner,
+    repo,
+    path: "workspace-index.json",
+  });
+  return file !== null;
 };
 
 const getUserInstallationStatus = async (accessToken: string) => {
   const octokit = getOctokit(accessToken);
 
   try {
-    const [
-      { data: user },
-      {
-        data: { installations },
-      },
-    ] = await Promise.all([
-      octokit.rest.users.getAuthenticated(),
-      octokit.rest.apps.listInstallationsForAuthenticatedUser(),
+    const [user, installations] = await Promise.all([
+      getAuthenticatedUser(octokit),
+      listUserInstallations(octokit),
     ]);
 
-    const hasPersonalInstallation = installations.some((inst) => {
-      const account = inst.account;
-      return account && "login" in account && account.login === user.login;
-    });
+    const hasPersonalInstallation = installations.some(
+      (inst) => inst.account?.login === user.login,
+    );
 
     return { user, hasPersonalInstallation };
   } catch (error: unknown) {
@@ -55,18 +44,12 @@ const getUserWorkspaces = async (accessToken: string) => {
   const octokit = getOctokit(accessToken);
 
   try {
-    const { data: repos } = await octokit.rest.repos.listForAuthenticatedUser({
-      affiliation: "owner,collaborator",
-      sort: "updated",
-      per_page: 100,
-    });
+    const repos = await listUserRepos(octokit);
 
-    const _workspaces = repos.filter((repo) =>
-      repo.name.startsWith("anotado-"),
-    );
+    const candidates = repos.filter((repo) => repo.name.startsWith("anotado-"));
 
     const workspaceChecks = await Promise.all(
-      _workspaces.map(async (repo) => {
+      candidates.map(async (repo) => {
         const isValid = await checkHasWorkspaceIndex(
           octokit,
           repo.owner.login,
@@ -81,7 +64,6 @@ const getUserWorkspaces = async (accessToken: string) => {
     return { workspaces };
   } catch (error: unknown) {
     if (error instanceof RequestError && error.status === 401) {
-      console.log("Unauthorized access detected. Signing out user.");
       redirect("/api/auth/signout");
     }
 

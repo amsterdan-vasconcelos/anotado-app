@@ -1,4 +1,12 @@
 import { getOctokit } from "../../octokit";
+import {
+  createCommit,
+  createTree,
+  getBranchRef,
+  getCommit,
+  updateBranchRef,
+} from "../api/git";
+import { getFileContent, upsertFile } from "../api/repos";
 
 interface NotePayload {
   title: string;
@@ -18,18 +26,12 @@ export async function createNoteCommit(
   const octokit = getOctokit(token);
   const repo = `anotado-${workspace}`;
 
-  // Paralelo: info do repo + index
-  console.log("Iniciando criação de nota:", { owner, workspace, note });
-  const [repoInfoRes, fileRes] = await Promise.allSettled([
+  // ── Paralelo: info do repo + index ──────────────────────────────────────────
+  const [repoInfoRes, indexFileRes] = await Promise.allSettled([
     octokit.rest.repos.get({ owner, repo }),
-    octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: "workspace-index.json",
-    }),
+    getFileContent(octokit, { owner, repo, path: "workspace-index.json" }),
   ]);
 
-  console.log("Repo info result:", repoInfoRes);
   if (repoInfoRes.status === "rejected") {
     throw new Error("WORKSPACE_NOT_FOUND");
   }
@@ -37,16 +39,8 @@ export async function createNoteCommit(
   const defaultBranch = repoInfoRes.value.data.default_branch || "main";
   let indexData = { categories: ["geral"], notes: [] as any[] };
 
-  if (
-    fileRes.status === "fulfilled" &&
-    !Array.isArray(fileRes.value.data) &&
-    fileRes.value.data.type === "file" &&
-    fileRes.value.data.content
-  ) {
-    const decoded = Buffer.from(fileRes.value.data.content, "base64").toString(
-      "utf-8",
-    );
-    indexData = JSON.parse(decoded);
+  if (indexFileRes.status === "fulfilled" && indexFileRes.value !== null) {
+    indexData = JSON.parse(indexFileRes.value.content);
   }
 
   const slugExists = indexData.notes.some((n: any) => n.slug === note.slug);
@@ -68,52 +62,55 @@ export async function createNoteCommit(
   const indexString = JSON.stringify(indexData, null, 2);
   const mdString = `---\ntitle: "${note.title}"\ndate: "${note.date}"\ncategory: "${note.category}"\n---\n\n${note.content}`;
 
+  // ── Tenta buscar o branch atual — detecta repo vazio ────────────────────────
   let isEmptyRepo = false;
   let latestCommitSha: string | null = null;
   let baseTreeSha: string | null = null;
 
   try {
-    const { data: refData } = await octokit.rest.git.getRef({
+    const ref = await getBranchRef(octokit, {
       owner,
       repo,
-      ref: `heads/${defaultBranch}`,
+      branch: defaultBranch,
     });
-    latestCommitSha = refData.object.sha;
+    latestCommitSha = ref.commitSha;
 
-    const { data: commitData } = await octokit.rest.git.getCommit({
+    const commit = await getCommit(octokit, {
       owner,
       repo,
-      commit_sha: latestCommitSha,
+      commitSha: latestCommitSha,
     });
-    baseTreeSha = commitData.tree.sha;
+    baseTreeSha = commit.treeSha;
   } catch {
     isEmptyRepo = true;
   }
 
+  // ── Repo vazio: fallback para upsertFile simples ─────────────────────────────
   if (isEmptyRepo) {
-    await octokit.rest.repos.createOrUpdateFileContents({
+    await upsertFile(octokit, {
       owner,
       repo,
       path: "workspace-index.json",
       message: "feat: inicializar workspace",
-      content: Buffer.from(indexString).toString("base64"),
+      content: indexString,
     });
 
-    await octokit.rest.repos.createOrUpdateFileContents({
+    await upsertFile(octokit, {
       owner,
       repo,
       path: `${note.category}/${note.slug}.md`,
       message: `feat: criar nota ${note.title}`,
-      content: Buffer.from(mdString).toString("base64"),
+      content: mdString,
     });
 
     return;
   }
 
-  const { data: newTree } = await octokit.rest.git.createTree({
+  // ── Caminho normal: commit via Git plumbing (1 commit, 2 arquivos) ───────────
+  const { treeSha } = await createTree(octokit, {
     owner,
     repo,
-    base_tree: baseTreeSha!,
+    baseTreeSha: baseTreeSha!,
     tree: [
       {
         path: "workspace-index.json",
@@ -130,18 +127,18 @@ export async function createNoteCommit(
     ],
   });
 
-  const { data: newCommit } = await octokit.rest.git.createCommit({
+  const { commitSha } = await createCommit(octokit, {
     owner,
     repo,
     message: `feat: criar nota ${note.title}`,
-    tree: newTree.sha,
-    parents: [latestCommitSha!],
+    treeSha,
+    parentShas: [latestCommitSha!],
   });
 
-  await octokit.rest.git.updateRef({
+  await updateBranchRef(octokit, {
     owner,
     repo,
-    ref: `heads/${defaultBranch}`,
-    sha: newCommit.sha,
+    branch: defaultBranch,
+    commitSha,
   });
 }

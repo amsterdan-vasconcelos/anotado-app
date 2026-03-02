@@ -1,3 +1,4 @@
+import { getFileContent } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 import { CreateNoteClient } from "@/modulos/note/create/components/CreateNoteClient";
@@ -19,27 +20,19 @@ const CreateNotePage = async ({ searchParams }: CreateNotePageProps) => {
 
   let categories = ["geral"];
 
-  const indexRes = await octokit.rest.repos
-    .getContent({ owner, repo, path: "workspace-index.json" })
-    .catch(() => null);
+  const indexFile = await getFileContent(octokit, {
+    owner,
+    repo,
+    path: "workspace-index.json",
+  });
 
-  if (indexRes) {
-    const fileData = indexRes.data;
-    if (
-      !Array.isArray(fileData) &&
-      fileData.type === "file" &&
-      fileData.content
-    ) {
-      const decodedContent = Buffer.from(fileData.content, "base64").toString(
-        "utf-8",
-      );
-      const parsedData = JSON.parse(decodedContent);
-      if (parsedData.categories && Array.isArray(parsedData.categories)) {
-        categories = parsedData.categories;
-      }
+  if (indexFile) {
+    const parsedData = JSON.parse(indexFile.content);
+    if (parsedData.categories && Array.isArray(parsedData.categories)) {
+      categories = parsedData.categories;
     }
   }
-  console.log("Loaded categories:", owner, workspace, categories);
+
   return (
     <CreateNoteClient
       owner={owner}

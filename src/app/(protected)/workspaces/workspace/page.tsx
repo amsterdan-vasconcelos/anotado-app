@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getFileContent, getRepo } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 import { formatDisplayName } from "@/lib/string-util";
@@ -25,38 +26,27 @@ export default async function WorkspacePage({
   let notes = [];
   let displayName = formatDisplayName(workspaceSlug);
 
-  const [repoRes, fileRes] = await Promise.allSettled([
-    octokit.rest.repos.get({ owner: ownerSlug, repo }),
-    octokit.rest.repos.getContent({
+  const [repoInfoRes, indexFileRes] = await Promise.allSettled([
+    getRepo(octokit, { owner: ownerSlug, repo }),
+    getFileContent(octokit, {
       owner: ownerSlug,
       repo,
       path: "workspace-index.json",
     }),
   ]);
 
-  if (repoRes.status === "rejected") {
+  if (repoInfoRes.status === "rejected") {
     redirect("/");
   }
 
-  if (repoRes.status === "fulfilled") {
-    const description = repoRes.value.data.description;
-    const prefix = "Workspace gerado pelo app de anotações: ";
-    if (!!description && description.startsWith(prefix)) {
-      displayName = description.replace(prefix, "");
-    }
+  const prefix = "Workspace gerado pelo app de anotações: ";
+  const description = repoInfoRes.value.description;
+  if (description?.startsWith(prefix)) {
+    displayName = description.replace(prefix, "");
   }
 
-  if (
-    fileRes.status === "fulfilled" &&
-    !Array.isArray(fileRes.value.data) &&
-    fileRes.value.data.type === "file" &&
-    fileRes.value.data.content
-  ) {
-    const decodedContent = Buffer.from(
-      fileRes.value.data.content,
-      "base64",
-    ).toString("utf-8");
-    const parsedData = JSON.parse(decodedContent);
+  if (indexFileRes.status === "fulfilled" && indexFileRes.value !== null) {
+    const parsedData = JSON.parse(indexFileRes.value.content);
     notes = parsedData.notes ?? [];
   }
 

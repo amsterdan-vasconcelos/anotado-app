@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getFileContent } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 import { NoteViewerClient } from "@/modulos/note/NoteViewerClient";
@@ -25,36 +26,24 @@ export default async function ViewNotePage({
   const octokit = getOctokit(session.accessToken || "");
   const repo = `anotado-${workspace}`;
 
-  const fileRes = await octokit.rest.repos
-    .getContent({ owner, repo, path: `${category}/${slug}.md` })
-    .catch(() => null);
+  const file = await getFileContent(octokit, {
+    owner,
+    repo,
+    path: `${category}/${slug}.md`,
+  });
 
-  if (!fileRes) {
+  if (!file) {
     redirect(`/workspaces/unit?owner=${owner}&workspace=${workspace}`);
   }
 
-  const fileData = fileRes.data;
-
-  if (
-    Array.isArray(fileData) ||
-    fileData.type !== "file" ||
-    !fileData.content
-  ) {
-    redirect(`/workspaces/unit?owner=${owner}&workspace=${workspace}`);
-  }
-
-  const decodedContent = Buffer.from(fileData.content, "base64").toString(
-    "utf-8",
-  );
-
-  const titleMatch = decodedContent.match(/title:\s*"(.*?)"/);
+  const titleMatch = file.content.match(/title:\s*"(.*?)"/);
   const noteTitle = titleMatch ? titleMatch[1] : slug;
 
-  const contentSplit = decodedContent.split("---");
+  const contentSplit = file.content.split("---");
   const noteContent =
     contentSplit.length > 2
       ? contentSplit.slice(2).join("---").trim()
-      : decodedContent;
+      : file.content;
 
   return (
     <NoteViewerClient

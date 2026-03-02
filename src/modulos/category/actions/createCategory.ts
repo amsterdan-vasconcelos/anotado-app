@@ -1,6 +1,7 @@
 "use server";
 
 import type { ActionResult } from "@/lib/action-result";
+import { getFileContent, upsertFile } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 
@@ -15,22 +16,17 @@ export async function createCategory(
     const octokit = getOctokit(session.accessToken || "");
     const repo = `anotado-${workspace}`;
 
-    const { data: indexFile } = await octokit.rest.repos.getContent({
+    const indexFile = await getFileContent(octokit, {
       owner,
       repo,
       path: "workspace-index.json",
     });
 
-    if (
-      Array.isArray(indexFile) ||
-      indexFile.type !== "file" ||
-      !indexFile.content
-    ) {
+    if (!indexFile) {
       return { success: false, error: "Arquivo de índice não encontrado." };
     }
 
-    const decoded = Buffer.from(indexFile.content, "base64").toString("utf-8");
-    const indexData = JSON.parse(decoded);
+    const indexData = JSON.parse(indexFile.content);
 
     if (!indexData.categories) indexData.categories = ["geral"];
 
@@ -40,14 +36,12 @@ export async function createCategory(
 
     indexData.categories.push(category);
 
-    await octokit.rest.repos.createOrUpdateFileContents({
+    await upsertFile(octokit, {
       owner,
       repo,
       path: "workspace-index.json",
       message: `feat: adicionar categoria ${category}`,
-      content: Buffer.from(JSON.stringify(indexData, null, 2)).toString(
-        "base64",
-      ),
+      content: JSON.stringify(indexData, null, 2),
       sha: indexFile.sha,
     });
 

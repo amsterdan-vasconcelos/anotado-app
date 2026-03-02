@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getFileContent } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 import { EditNoteClient } from "@/modulos/note/edit/EditNoteClient";
@@ -27,59 +28,33 @@ export default async function EditNotePage({
   const octokit = getOctokit(session.accessToken || "");
   const repo = `anotado-${workspace}`;
 
-  const [fileRes, indexRes] = await Promise.allSettled([
-    octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: `${category}/${slug}.md`,
-    }),
-    octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: "workspace-index.json",
-    }),
+  const [noteFileRes, indexFileRes] = await Promise.allSettled([
+    getFileContent(octokit, { owner, repo, path: `${category}/${slug}.md` }),
+    getFileContent(octokit, { owner, repo, path: "workspace-index.json" }),
   ]);
 
-  if (
-    fileRes.status === "rejected" ||
-    Array.isArray(fileRes.value.data) ||
-    fileRes.value.data.type !== "file" ||
-    !fileRes.value.data.content
-  ) {
+  if (noteFileRes.status === "rejected" || noteFileRes.value === null) {
     redirect(
-      `/workspace?owner=${owner}&workspace=${workspace}&${category}=${slug}`,
+      `/note?owner=${owner}&workspace=${workspace}&category=${category}&slug=${slug}`,
     );
   }
 
-  const fileData = fileRes.value.data;
-  const decodedContent = Buffer.from(fileData.content, "base64").toString(
-    "utf-8",
-  );
+  const noteFile = noteFileRes.value;
+  const fileSha = noteFile.sha;
 
-  const fileSha = fileData.sha;
-
-  const titleMatch = decodedContent.match(/title:\s*"(.*?)"/);
+  const titleMatch = noteFile.content.match(/title:\s*"(.*?)"/);
   const noteTitle = titleMatch ? titleMatch[1] : slug;
 
-  const contentSplit = decodedContent.split("---");
+  const contentSplit = noteFile.content.split("---");
   const noteContent =
     contentSplit.length > 2
       ? contentSplit.slice(2).join("---").trim()
-      : decodedContent;
+      : noteFile.content;
 
   let categories = ["geral"];
 
-  if (
-    indexRes.status === "fulfilled" &&
-    !Array.isArray(indexRes.value.data) &&
-    indexRes.value.data.type === "file" &&
-    indexRes.value.data.content
-  ) {
-    const decodedIndex = Buffer.from(
-      indexRes.value.data.content,
-      "base64",
-    ).toString("utf-8");
-    const parsedData = JSON.parse(decodedIndex);
+  if (indexFileRes.status === "fulfilled" && indexFileRes.value !== null) {
+    const parsedData = JSON.parse(indexFileRes.value.content);
     if (parsedData.categories && Array.isArray(parsedData.categories)) {
       categories = parsedData.categories;
     }

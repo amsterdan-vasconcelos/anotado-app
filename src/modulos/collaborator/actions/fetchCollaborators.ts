@@ -1,13 +1,14 @@
 "use server";
 
 import type { ActionResult } from "@/lib/action-result";
+import { listCollaborators } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 
 export interface Collaborator {
   id: number;
   login: string;
-  avatar_url: string;
+  avatarUrl: string;
 }
 
 export async function fetchCollaborators(
@@ -20,16 +21,7 @@ export async function fetchCollaborators(
     const octokit = getOctokit(session.accessToken ?? "");
     const repo = `anotado-${workspace}`;
 
-    const { data } = await octokit.rest.repos.listCollaborators({
-      owner,
-      repo,
-    });
-
-    const collaborators: Collaborator[] = data.map((c) => ({
-      id: c.id,
-      login: c.login,
-      avatar_url: c.avatar_url,
-    }));
+    const collaborators = await listCollaborators(octokit, { owner, repo });
 
     return { success: true, data: collaborators };
   } catch (error) {

@@ -1,6 +1,8 @@
 "use server";
 
 import type { ActionResult } from "@/lib/action-result";
+import { createRepo, upsertFile } from "@/lib/github/api/repos";
+import { getAuthenticatedUser } from "@/lib/github/api/users";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 import { generateSlug } from "@/lib/string-util";
@@ -15,29 +17,26 @@ export async function createWorkspace(
     const repoName = `anotado-${slug}`;
     const octokit = getOctokit(session.accessToken || "");
 
-    const { data: user } = await octokit.rest.users.getAuthenticated();
+    const user = await getAuthenticatedUser(octokit);
 
-    await octokit.rest.repos.createForAuthenticatedUser({
+    await createRepo(octokit, {
       name: repoName,
       private: true,
-      auto_init: true,
+      autoInit: true,
       description: `Workspace gerado pelo app de anotações: ${name}`,
     });
 
     const initialIndex = { categories: ["geral"], notes: [] };
-    const encodedContent = Buffer.from(
-      JSON.stringify(initialIndex, null, 2),
-    ).toString("base64");
 
     // Aguarda o GitHub finalizar a inicialização do repositório
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    await octokit.rest.repos.createOrUpdateFileContents({
+    await upsertFile(octokit, {
       owner: user.login,
       repo: repoName,
       path: "workspace-index.json",
       message: "feat: setup inicial do workspace",
-      content: encodedContent,
+      content: JSON.stringify(initialIndex, null, 2),
     });
 
     return { success: true, data: { owner: user.login, slug } };

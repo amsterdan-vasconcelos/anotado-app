@@ -1,4 +1,13 @@
 import { getOctokit } from "../../octokit";
+import {
+  createCommit,
+  createTree,
+  type GitTreeItem,
+  getBranchRef,
+  getCommit,
+  updateBranchRef,
+} from "../api/git";
+import { getFileContent } from "../api/repos";
 
 interface NotePayload {
   title: string;
@@ -20,15 +29,11 @@ export async function updateNoteCommit(
   const octokit = getOctokit(token);
   const repo = `anotado-${workspace}`;
 
-  // Paralelo: info do repo + index + arquivo atual (para detecção de conflito)
-  const [repoInfoRes, fileRes, currentFileRes] = await Promise.allSettled([
+  // ── Paralelo: info do repo + index + arquivo atual (detecção de conflito) ────
+  const [repoInfoRes, indexFileRes, currentFileRes] = await Promise.allSettled([
     octokit.rest.repos.get({ owner, repo }),
-    octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: "workspace-index.json",
-    }),
-    octokit.rest.repos.getContent({
+    getFileContent(octokit, { owner, repo, path: "workspace-index.json" }),
+    getFileContent(octokit, {
       owner,
       repo,
       path: `${oldCategory}/${oldSlug}.md`,
@@ -42,33 +47,25 @@ export async function updateNoteCommit(
   const defaultBranch = repoInfoRes.value.data.default_branch || "main";
   let indexData = { categories: ["geral"], notes: [] as any[] };
 
-  if (
-    fileRes.status === "fulfilled" &&
-    !Array.isArray(fileRes.value.data) &&
-    fileRes.value.data.type === "file" &&
-    fileRes.value.data.content
-  ) {
-    const decoded = Buffer.from(fileRes.value.data.content, "base64").toString(
-      "utf-8",
-    );
-    indexData = JSON.parse(decoded);
+  if (indexFileRes.status === "fulfilled" && indexFileRes.value !== null) {
+    indexData = JSON.parse(indexFileRes.value.content);
   }
 
-  // Detecção real de conflito usando o arquivo já buscado em paralelo
-  if (note.sha && currentFileRes.status === "fulfilled") {
-    const currentFile = currentFileRes.value.data;
-    if (
-      !Array.isArray(currentFile) &&
-      currentFile.type === "file" &&
-      currentFile.sha !== note.sha
-    ) {
-      const decodedRemote = Buffer.from(
-        currentFile.content ?? "",
-        "base64",
-      ).toString("utf-8");
-      const parts = decodedRemote.split("---");
+  // ── Detecção de conflito usando o SHA do arquivo atual ───────────────────────
+  if (
+    note.sha &&
+    currentFileRes.status === "fulfilled" &&
+    currentFileRes.value !== null
+  ) {
+    const currentFile = currentFileRes.value;
+
+    if (currentFile.sha !== note.sha) {
+      // O arquivo foi modificado por outra pessoa desde que o usuário abriu a edição
+      const parts = currentFile.content.split("---");
       const remoteContent =
-        parts.length > 2 ? parts.slice(2).join("---").trim() : decodedRemote;
+        parts.length > 2
+          ? parts.slice(2).join("---").trim()
+          : currentFile.content;
 
       const conflict = new Error("CONFLICT") as Error & {
         status: number;
@@ -82,6 +79,7 @@ export async function updateNoteCommit(
     }
   }
 
+  // ── Atualiza o índice ────────────────────────────────────────────────────────
   const slugExists = indexData.notes.some(
     (n: any) => n.slug === note.slug && n.slug !== oldSlug,
   );
@@ -106,21 +104,21 @@ export async function updateNoteCommit(
   const indexString = JSON.stringify(indexData, null, 2);
   const mdString = `---\ntitle: "${note.title}"\ndate: "${note.date}"\ncategory: "${note.category}"\n---\n\n${note.content}`;
 
-  const { data: refData } = await octokit.rest.git.getRef({
+  // ── Git plumbing: busca o commit atual do branch ─────────────────────────────
+  const { commitSha: latestCommitSha } = await getBranchRef(octokit, {
     owner,
     repo,
-    ref: `heads/${defaultBranch}`,
+    branch: defaultBranch,
   });
-  const latestCommitSha = refData.object.sha;
 
-  const { data: commitData } = await octokit.rest.git.getCommit({
+  const { treeSha: baseTreeSha } = await getCommit(octokit, {
     owner,
     repo,
-    commit_sha: latestCommitSha,
+    commitSha: latestCommitSha,
   });
-  const baseTreeSha = commitData.tree.sha;
 
-  const tree: any[] = [
+  // ── Monta a tree com os arquivos alterados ───────────────────────────────────
+  const tree: GitTreeItem[] = [
     {
       path: "workspace-index.json",
       mode: "100644",
@@ -138,32 +136,30 @@ export async function updateNoteCommit(
   const oldPath = `${oldCategory}/${oldSlug}.md`;
   const newPath = `${note.category}/${note.slug}.md`;
 
+  // Se a nota foi movida de categoria ou renomeada, remove o arquivo antigo
   if (oldPath !== newPath) {
     tree.push({ path: oldPath, mode: "100644", type: "blob", sha: null });
   }
 
-  const { data: newTree } = await octokit.rest.git.createTree({
+  const { treeSha } = await createTree(octokit, {
     owner,
     repo,
-    base_tree: baseTreeSha,
+    baseTreeSha,
     tree,
   });
 
-  const { data: newCommit } = await octokit.rest.git.createCommit({
+  const { commitSha } = await createCommit(octokit, {
     owner,
     repo,
     message: `refactor: atualizar nota ${note.title}`,
-    tree: newTree.sha,
-    parents: [latestCommitSha],
+    treeSha,
+    parentShas: [latestCommitSha],
   });
 
-  const finalResponse = await octokit.rest.git.updateRef({
+  await updateBranchRef(octokit, {
     owner,
     repo,
-    ref: `heads/${defaultBranch}`,
-    sha: newCommit.sha,
+    branch: defaultBranch,
+    commitSha,
   });
-
-  const rateLimit = finalResponse.headers["x-ratelimit-remaining"];
-  console.log(`[GitHub API] Rate limit restante: ${rateLimit}/5000`);
 }

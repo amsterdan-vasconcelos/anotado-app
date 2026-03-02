@@ -1,6 +1,7 @@
 "use server";
 
 import type { ActionResult } from "@/lib/action-result";
+import { deleteRepo } from "@/lib/github/api/repos";
 import { getOctokit } from "@/lib/octokit";
 import { getRequiredSession } from "@/lib/session";
 
@@ -14,7 +15,7 @@ export async function deleteWorkspace(
     const octokit = getOctokit(session.accessToken ?? "");
     const repoName = `anotado-${workspace}`;
 
-    await octokit.rest.repos.delete({ owner, repo: repoName });
+    await deleteRepo(octokit, { owner, repo: repoName });
 
     return { success: true, data: undefined };
   } catch (error) {
