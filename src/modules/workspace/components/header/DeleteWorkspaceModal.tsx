@@ -47,7 +47,6 @@ export function DeleteWorkspaceModal({
 
     onOpenChange(false);
     router.push("/workspaces");
-    router.refresh();
   }
 
   return (
