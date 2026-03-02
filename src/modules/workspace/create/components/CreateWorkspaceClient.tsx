@@ -14,7 +14,7 @@ export function CreateWorkspaceClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     if (!name.trim()) return;
 
@@ -32,7 +32,6 @@ export function CreateWorkspaceClient() {
     router.push(
       `/workspaces/unit?owner=${result.data.owner}&workspace=${result.data.slug}`,
     );
-    router.refresh();
   }
 
   return (
