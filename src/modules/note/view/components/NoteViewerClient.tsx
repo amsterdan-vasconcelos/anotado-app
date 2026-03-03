@@ -26,7 +26,6 @@ import {
   NoteSidebarHistoryItem,
   NoteSidebarHistoryList,
   NoteSidebarSection,
-  NoteSidebarToggle,
 } from "./NoteRightSidebar";
 
 export interface NoteViewerClientProps {
@@ -47,8 +46,6 @@ export function NoteViewerClient({
   initialTitle,
 }: NoteViewerClientProps) {
   const {
-    sidebarOpen,
-    setSidebarOpen,
     history,
     version,
     deleteContext,
@@ -76,13 +73,15 @@ export function NoteViewerClient({
         displayedContent={version.content}
       />
 
-      {/* Right sidebar */}
-      <NoteSidebar open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <NoteSidebarToggle />
-
+      {/* Right sidebar – fixed panel matching create/edit styling */}
+      <NoteSidebar>
         <NoteSidebarContent>
           <div className="px-6 pt-5 pb-6 flex flex-col gap-6 shrink-0">
-            <NoteSidebarHeader title={initialTitle} category={category} />
+            <NoteSidebarHeader
+              mode="view"
+              title={initialTitle}
+              category={category}
+            />
 
             <Separator />
 

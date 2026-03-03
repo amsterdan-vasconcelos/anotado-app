@@ -1,6 +1,10 @@
 import { Eye, FilePlus2, PenLine } from "lucide-react";
 
-const MODE_CONFIG = {
+// shared configuration used by both left and right sidebars (and potentially other
+// layout elements) so that all panels for a given mode use a consistent color
+// palette. exporting the constant allows other modules to reference the same
+// values instead of duplicating them.
+export const MODE_CONFIG = {
   view: {
     Icon: Eye,
     topBarBg: "bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800",

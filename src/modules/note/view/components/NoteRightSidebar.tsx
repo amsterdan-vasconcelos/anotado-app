@@ -1,76 +1,77 @@
 "use client";
 
-import {
-  Clock,
-  GitCommit,
-  PanelRightClose,
-  PanelRightOpen,
-} from "lucide-react";
+import { Clock, GitCommit } from "lucide-react";
 import Image from "next/image";
-import * as React from "react";
+// React is not required explicitly anymore; the file is purely functional and only
+// uses JSX which is handled by the compiler.
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { CommitRecord } from "@/modules/note/actions/fetchHistory";
 
-const NoteSidebarContext = React.createContext<{
-  open: boolean;
-  onOpenChange: React.Dispatch<React.SetStateAction<boolean>>;
-} | null>(null);
+// bring in the shared mode configuration so that the right sidebar uses the
+// exact same background/border classes as the left sidebar. this keeps the
+// colour scheme consistent across all panels.
+import { MODE_CONFIG } from "@/modules/note/components/LeftSidebar";
 
+// small palette mapping used specifically for the right/metadata sidebar so
+// its header matches the look-and-feel of the create/edit sidebars.
+const SIDEBAR_STYLE: Record<
+  "view" | "create" | "edit",
+  { iconBg: string; iconColor: string; badgeBg: string }
+> = {
+  view: {
+    iconBg: "bg-sky-100 dark:bg-sky-900/50",
+    iconColor: "text-sky-600 dark:text-sky-400",
+    badgeBg: "bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300",
+  },
+  create: {
+    iconBg: "bg-emerald-100 dark:bg-emerald-900/50",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+    badgeBg:
+      "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300",
+  },
+  edit: {
+    iconBg: "bg-amber-100 dark:bg-amber-900/50",
+    iconColor: "text-amber-600 dark:text-amber-400",
+    badgeBg:
+      "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300",
+  },
+};
+
+// simplified, non-collapsible sidebar. the previous iterations exposed a
+// toggle button and managed an "open" state; in practice that behaviour was
+// only used on the view page, and it made the panel feel disconnected from the
+// rest of the layout (different background colour, extra interactive affordance).
+//
+// the senior‑level decision is to treat the right sidebar as just another
+// layout panel: it should be present when the route needs it, should share the
+// colour palette of the current mode, and should not collapse by default. the
+// component remains lightweight and entirely client‑free.
 export function NoteSidebar({
-  open,
-  onOpenChange,
   children,
   className,
 }: {
-  open: boolean;
-  onOpenChange: React.Dispatch<React.SetStateAction<boolean>>;
   children: React.ReactNode;
   className?: string;
 }) {
+  // Use the same base container classes used by the create/edit form so the
+  // panel background, border and scroll behaviour match exactly.
   return (
-    <NoteSidebarContext.Provider value={{ open, onOpenChange }}>
-      <aside
-        className={cn(
-          "shrink-0 flex flex-col border-l border-border bg-card overflow-hidden transition-[width] duration-200 ease-in-out",
-          open ? "w-72" : "w-14",
-          className,
-        )}
-      >
-        {children}
-      </aside>
-    </NoteSidebarContext.Provider>
-  );
-}
-
-export function NoteSidebarToggle({ className }: { className?: string }) {
-  const context = React.useContext(NoteSidebarContext);
-  if (!context) throw new Error("Missing NoteSidebarContext");
-
-  return (
-    <div
+    <aside
       className={cn(
-        "pt-6 shrink-0 flex",
-        context.open ? "px-6 justify-end" : "justify-center",
+        "w-72 shrink-0 flex flex-col border-l border-border bg-card overflow-y-auto",
         className,
       )}
     >
-      <button
-        type="button"
-        onClick={() => context.onOpenChange((v) => !v)}
-        title={context.open ? "Fechar painel" : "Abrir painel"}
-        className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-      >
-        {context.open ? (
-          <PanelRightClose size={20} />
-        ) : (
-          <PanelRightOpen size={20} />
-        )}
-      </button>
-    </div>
+      {children}
+    </aside>
   );
 }
 
+// the toggle and translucent content helpers are no longer required; children
+// are always visible. we keep some lightweight wrapper components for
+// consistency with existing markup in viewer pages, but they are mere
+// pass‑throughs.
 export function NoteSidebarContent({
   children,
   className,
@@ -78,39 +79,49 @@ export function NoteSidebarContent({
   children: React.ReactNode;
   className?: string;
 }) {
-  const context = React.useContext(NoteSidebarContext);
-  if (!context) throw new Error("Missing NoteSidebarContext");
-
   return (
-    <div
-      className={cn(
-        "flex flex-col min-h-0 flex-1 transition-opacity duration-150",
-        context.open ? "opacity-100" : "opacity-0 pointer-events-none",
-        className,
-      )}
-    >
+    <div className={cn("flex flex-col min-h-0 flex-1", className)}>
       {children}
     </div>
   );
 }
 
 export function NoteSidebarHeader({
+  mode,
   title,
   category,
   className,
 }: {
+  mode: "view" | "create" | "edit";
   title: string;
   category: string;
   className?: string;
 }) {
+  const cfg = MODE_CONFIG[mode];
+  const ModeIcon = cfg.Icon;
+  const style = SIDEBAR_STYLE[mode];
+
   return (
     <div className={className}>
-      <h2 className="text-base font-semibold text-foreground leading-snug">
-        {title}
-      </h2>
-      <div className="mt-2">
-        <Badge variant="secondary">{category}</Badge>
+      <div className="flex items-center gap-2">
+        <div className={cn("p-1.5 rounded-lg", style.iconBg)}>
+          <ModeIcon size={14} className={style.iconColor} />
+        </div>
+
+        <h2 className="text-base font-semibold text-foreground">{title}</h2>
+
+        <span
+          className={cn(
+            "ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full",
+            style.badgeBg,
+          )}
+        >
+          {category}
+        </span>
       </div>
+      <p className="text-xs text-muted-foreground mt-2">
+        Categoria: {category}
+      </p>
     </div>
   );
 }
