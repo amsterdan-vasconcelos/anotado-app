@@ -1,55 +1,38 @@
 "use client";
 
-import { ArrowLeft, FilePlus2, Loader2, PenLine, Save } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Loader2, Save } from "lucide-react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { TipTapEditor } from "@/modules/editor/components/TipTapEditor";
+import { MODE_CONFIG as BASE_MODE_CONFIG } from "@/modules/note/components/LeftSidebar";
 import { CategorySelector } from "./CategorySelector";
 
-// ─── Mode configuration ──────────────────────────────────────────────────────
-const MODE_CONFIG = {
+const FORM_EXTRAS = {
   create: {
-    Icon: FilePlus2,
-    topBarBg:
-      "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800",
-    topBarText: "text-emerald-700 dark:text-emerald-300",
-    topBarLabel: "Nova Nota",
-    sidebarBg:
-      "bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900",
-    sidebarIconColor: "text-emerald-600 dark:text-emerald-400",
-    badgeBg:
-      "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300",
     badgeLabel: "Novo",
     sidebarTitle: "Nova Nota",
     sidebarDesc: "Preencha as informações para criar uma nova anotação.",
     saveLabel: "Criar Nota",
+    badgeBg:
+      "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300",
     editorRing:
       "focus-within:ring-emerald-400/40 focus-within:border-emerald-400",
   },
   edit: {
-    Icon: PenLine,
-    topBarBg:
-      "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800",
-    topBarText: "text-amber-700 dark:text-amber-300",
-    topBarLabel: "Editando Nota",
-    sidebarBg:
-      "bg-amber-50/60 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900",
-    sidebarIconColor: "text-amber-600 dark:text-amber-400",
-    badgeBg:
-      "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300",
     badgeLabel: "Edição",
     sidebarTitle: "Editar Nota",
     sidebarDesc: "Atualize as informações da sua anotação.",
     saveLabel: "Salvar Nota",
+    badgeBg:
+      "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300",
     editorRing: "focus-within:ring-amber-400/40 focus-within:border-amber-400",
   },
 } as const;
 
-// ─── Props ───────────────────────────────────────────────────────────────────
 interface NoteFormProps {
   mode: "create" | "edit";
   categories: string[];
@@ -65,14 +48,8 @@ interface NoteFormProps {
   }) => void;
   isLoading: boolean;
   error?: string | null;
-  /**
-   * notified whenever the title state changes; used by parent layout
-   * to keep the top bar in sync with what the user is typing.
-   */
-  onTitleChange?: (title: string) => void;
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
 export function NoteForm({
   mode,
   categories,
@@ -80,9 +57,24 @@ export function NoteForm({
   onSubmit,
   isLoading,
   error,
-  onTitleChange,
 }: NoteFormProps) {
-  const cfg = MODE_CONFIG[mode];
+  const base = BASE_MODE_CONFIG[mode];
+  const extras = FORM_EXTRAS[mode];
+
+  const cfg = {
+    Icon: base.Icon,
+    topBarBg: base.topBarBg,
+    topBarText: base.topBarText,
+    topBarLabel: base.topBarLabel,
+    sidebarBg: base.leftSidebarBg,
+    sidebarIconColor: base.leftSidebarIcon,
+    badgeBg: extras.badgeBg,
+    badgeLabel: extras.badgeLabel,
+    sidebarTitle: extras.sidebarTitle,
+    sidebarDesc: extras.sidebarDesc,
+    saveLabel: extras.saveLabel,
+    editorRing: extras.editorRing,
+  } as const;
   const ModeIcon = cfg.Icon;
 
   const [title, setTitle] = useState(initialData?.title ?? "");
@@ -90,32 +82,18 @@ export function NoteForm({
     initialData?.category ?? categories[0] ?? "geral",
   );
 
-  // propagate title updates to parent if requested
-  // only `title` is a dependency; handler changes are uncommon and
-  // don't need to trigger an update.
-  useEffect(() => {
-    if (onTitleChange) onTitleChange(title);
-  }, [title, onTitleChange]);
-
-  // ─── Content is stored in a ref, NOT in state.
-  // This means keystrokes never trigger a React re-render of NoteForm,
-  // eliminating the main source of editor lag / mouse-freeze.
   const contentRef = useRef(initialData?.content ?? "");
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     onSubmit({ title, category, content: contentRef.current });
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-1 overflow-hidden">
-      {/* main editor and right pane are both inside the form so that
-          metadata inputs submit together with content */}
       <main className="flex-1 overflow-y-auto bg-muted/30 flex justify-center py-12 px-6">
         <div className="w-full max-w-3xl bg-card rounded-2xl shadow-md ring-1 ring-border/60 min-h-full">
           <TipTapEditor
-            // Initial value only — editor manages its own content internally.
-            // Updates flow out via onChange → contentRef (no state update).
             value={initialData?.content ?? ""}
             onChange={(val) => {
               contentRef.current = val;
@@ -131,10 +109,8 @@ export function NoteForm({
         </div>
       </main>
 
-      {/* metadata sidebar remains part of the form */}
       <aside className="w-72 shrink-0 flex flex-col border-l border-border bg-card overflow-y-auto">
         <div className="p-6 flex flex-col gap-6 flex-1">
-          {/* Sidebar header */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <div
@@ -164,7 +140,6 @@ export function NoteForm({
 
           <Separator />
 
-          {/* Metadata fields */}
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="note-title">Título</Label>
@@ -190,14 +165,12 @@ export function NoteForm({
             </div>
           </div>
 
-          {/* Error */}
           {error && (
             <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2">
               {error}
             </p>
           )}
 
-          {/* Save button pinned to bottom */}
           <div className="mt-auto pt-4">
             <Button
               type="submit"
