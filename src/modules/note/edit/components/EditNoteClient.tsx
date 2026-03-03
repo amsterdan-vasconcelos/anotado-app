@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { UpdateNoteResult } from "@/modules/note/actions/updateNote";
 import { updateNote } from "@/modules/note/actions/updateNote";
+import { NoteLayout } from "@/modules/note/components/NoteLayout";
 import { NoteForm } from "../../create/components/NoteForm";
 import { ConflictModal } from "./ConflictModal";
 
@@ -40,11 +41,13 @@ export function EditNoteClient({
     title: string;
     category: string;
   } | null>(null);
+  const [currentTitle, setCurrentTitle] = useState(initialData?.title ?? "");
 
   async function handleUpdateNote(
     data: { title: string; category: string; content: string },
     forceSha?: string,
   ) {
+    setCurrentTitle(data.title);
     setIsLoading(true);
     setError(null);
 
@@ -99,15 +102,23 @@ export function EditNoteClient({
 
   return (
     <>
-      <NoteForm
+      <NoteLayout
         mode="edit"
-        categories={categories}
-        initialData={initialData}
-        onSubmit={(data) => handleUpdateNote(data)}
-        isLoading={isLoading}
-        onCancel={() => router.back()}
-        error={error}
-      />
+        title={currentTitle}
+        category={oldCategory}
+        owner={owner}
+        workspace={workspace}
+      >
+        <NoteForm
+          mode="edit"
+          categories={categories}
+          initialData={initialData}
+          onSubmit={(data) => handleUpdateNote(data)}
+          isLoading={isLoading}
+          error={error}
+          onTitleChange={setCurrentTitle}
+        />
+      </NoteLayout>
 
       <ConflictModal
         open={!!conflictData}
