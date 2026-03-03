@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/a11y/noLabelWithoutControl: <explanation> */
 "use client";
 
 import type * as React from "react";
