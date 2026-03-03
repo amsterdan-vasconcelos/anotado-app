@@ -13,8 +13,8 @@ function HighlightedCode({ lang, code }: { lang: string; code: string }) {
     const tree = lowlight.highlight(lang, code);
     const content = toJsxRuntime(tree, {
       Fragment,
-      jsx: jsx as any,
-      jsxs: jsxs as any,
+      jsx: jsx,
+      jsxs: jsxs,
     });
     return (
       <div className="code-viewer-wrapper">
