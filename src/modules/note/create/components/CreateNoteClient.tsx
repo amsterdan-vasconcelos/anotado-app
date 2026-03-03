@@ -20,14 +20,12 @@ export function CreateNoteClient({
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [currentTitle, setCurrentTitle] = useState("");
 
   async function handleCreateNote(data: {
     title: string;
     category: string;
     content: string;
   }) {
-    setCurrentTitle(data.title);
     setIsLoading(true);
     setError(null);
 

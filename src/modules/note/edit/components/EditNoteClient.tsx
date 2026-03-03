@@ -41,13 +41,11 @@ export function EditNoteClient({
     title: string;
     category: string;
   } | null>(null);
-  const [currentTitle, setCurrentTitle] = useState(initialData?.title ?? "");
 
   async function handleUpdateNote(
     data: { title: string; category: string; content: string },
     forceSha?: string,
   ) {
-    setCurrentTitle(data.title);
     setIsLoading(true);
     setError(null);
 
