@@ -23,7 +23,7 @@ export const FooterRoot = () => {
         {/* Links */}
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <Link
-            href="https://github.com"
+            href="https://github.com/amsterdan-vasconcelos/anotado-app"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-foreground transition-colors"
