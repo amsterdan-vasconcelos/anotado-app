@@ -45,19 +45,13 @@ export function CreateNoteClient({
   }
 
   return (
-    <NoteLayout
-      mode="create"
-      title={currentTitle}
-      owner={owner}
-      workspace={workspace}
-    >
+    <NoteLayout mode="create" owner={owner} workspace={workspace}>
       <NoteForm
         mode="create"
         categories={categories}
         onSubmit={handleCreateNote}
         isLoading={isLoading}
         error={error}
-        onTitleChange={setCurrentTitle}
       />
     </NoteLayout>
   );

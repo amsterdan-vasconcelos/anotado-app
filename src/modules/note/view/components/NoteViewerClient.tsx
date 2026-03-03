@@ -63,7 +63,6 @@ export function NoteViewerClient({
 
   return (
     <NoteLayout mode="view" owner={owner} workspace={workspace}>
-      {/* Main content */}
       <NoteMainContent
         isViewingOldVersion={isViewingOldVersion}
         activeSha={version.activeSha}
@@ -73,7 +72,6 @@ export function NoteViewerClient({
         displayedContent={version.content}
       />
 
-      {/* Right sidebar – fixed panel matching create/edit styling */}
       <NoteSidebar>
         <NoteSidebarContent>
           <div className="px-6 pt-5 pb-6 flex flex-col gap-6 shrink-0">

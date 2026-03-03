@@ -102,13 +102,7 @@ export function EditNoteClient({
 
   return (
     <>
-      <NoteLayout
-        mode="edit"
-        title={currentTitle}
-        category={oldCategory}
-        owner={owner}
-        workspace={workspace}
-      >
+      <NoteLayout mode="edit" owner={owner} workspace={workspace}>
         <NoteForm
           mode="edit"
           categories={categories}
@@ -116,7 +110,6 @@ export function EditNoteClient({
           onSubmit={(data) => handleUpdateNote(data)}
           isLoading={isLoading}
           error={error}
-          onTitleChange={setCurrentTitle}
         />
       </NoteLayout>
 
